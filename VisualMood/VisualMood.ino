@@ -45,22 +45,6 @@ void loop() {
       float blue = 255 - red;
       setAllLights(strip.Color(red, 0, blue)); // Red
     }
-
-
-
-//    if (sensorValue < 800 && currentColor != 0) {
-//      setAllLights(strip.Color(0, 0, 0)); // Off
-//      currentColor = 0;
-//    }else if(800 <= sensorValue && sensorValue < 900 && currentColor != 1){
-//      setAllLights(strip.Color(0, 255, 0)); // Green
-//      currentColor = 1;
-//    }else if(900 <= sensorValue && sensorValue < 990 && currentColor != 2){
-//      setAllLights(strip.Color(0, 0, 255)); // Blue
-//      currentColor = 2;
-//    }else if(sensorValue >= 990 && currentColor != 3){
-//      setAllLights(strip.Color(255, 0, 0)); // Red
-//      currentColor = 3;
-//    }
 }
 
 // Fill the dots one after the other with a color
