@@ -18,6 +18,11 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(150, PIN, NEO_GRB + NEO_KHZ800);
 int currentColor = 0;
 int sensorValue = 0;
 
+// start with increasing intensity in the color
+// once breatheTimer reaches 500, we start to decrease color intensity
+int breatheTimer = 0;
+bool increaseIntensity = true;
+
 void setup() {
   Serial.begin(9600); //bits per second
   strip.begin();
@@ -44,6 +49,47 @@ void loop() {
       float red = (sensorValue % 341) * (765.0 / 1023.0);
       float blue = 255 - red;
       setAllLights(strip.Color(red, 0, blue)); // Red
+    }
+}
+
+void breatheEffectLoop() {
+    //----Pressure Sensor----
+    // Read the input on analog pin 0:
+    sensorValue = analogRead(A0);
+
+    // voltage range is 0 - 5
+    int voltage = sensorValue * (5.0 / 1023.0);
+
+    if (increaseIntensity) {
+      breatheTimer++;
+    }
+    else {
+      breatheTimer--;
+    }
+
+    // start decreasing intensity of lights from here on out
+    if (breatheTimer == 500) {
+      increaseIntensity = false;
+    }
+    // start increasing intensity of lights from here on out
+    else if (breatheTimer == 0) {
+      increaseIntensity = true;
+    }
+
+    // max brightness (255) * percentage of breatheTimer we've gone through
+    float colorIntensity = 255 * (breatheTimer / 500.0);
+
+    // green
+    if(voltage < 4.5){
+      setAllLights(strip.Color(0, colorIntensity, 0));
+    }
+    // blue
+    else if(voltage < 4.9){
+      setAllLights(strip.Color(0, 0, colorIntensity));
+    }
+    // red
+    else {
+      setAllLights(strip.Color(colorIntensity, 0, 0));
     }
 }
 
