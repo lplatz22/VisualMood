@@ -19,18 +19,18 @@ void setup() {
 void loop() {    
     //----Lights----
     // Some example procedures showing how to display to the pixels:
-    colorWipe(strip.Color(255, 0, 0), 15); // Red
-    colorWipe(strip.Color(0, 255, 0), 15); // Green
-    colorWipe(strip.Color(0, 0, 255), 15); // Blue
-  
-    // Send a theater pixel chase in...
-    theaterChase(strip.Color(127, 127, 127), 15); // White
-    theaterChase(strip.Color(127,   0,   0), 15); // Red
-    theaterChase(strip.Color(  0,   0, 127), 15); // Blue
+//    colorWipe(strip.Color(255, 0, 0), 15); // Red
+//    colorWipe(strip.Color(0, 255, 0), 15); // Green
+//    colorWipe(strip.Color(0, 0, 255), 15); // Blue
+//  
+//    // Send a theater pixel chase in...
+//    theaterChase(strip.Color(127, 127, 127), 15); // White
+//    theaterChase(strip.Color(127,   0,   0), 15); // Red
+//    theaterChase(strip.Color(  0,   0, 127), 15); // Blue
   
     rainbow(15);
-    rainbowCycle(15);
-    theaterChaseRainbow(25);
+//    rainbowCycle(15);
+//    theaterChaseRainbow(25);
 }
 
 // Fill the dots one after the other with a color
