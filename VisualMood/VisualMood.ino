@@ -1,7 +1,8 @@
 #include <Adafruit_NeoPixel.h>
 
 #define PIN 6
-
+#define MAX32 4294967295
+#define MAXSensor 1023
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = pin number (most are valid)
 // Parameter 3 = pixel type flags, add together as needed:
@@ -25,9 +26,15 @@ const int buttonPin = 2; // the number of the pushbutton pin
 int buttonState = 0;     // variable for reading the pushbutton status
 bool pushed = false;
 
+namespace smoothOP
+{
+  uint32_t curColor = 0;
+}
+
 enum LightMode { 
   simple, 
-  breathe, 
+  breathe,
+  smoothMove, 
   rainbow
 }; 
 
@@ -51,6 +58,8 @@ void loop() {
     if(currentMode == simple){
       currentMode = breathe;
     }else if (currentMode == breathe){
+      currentMode = smoothMove;
+    }else if (currentMode == smoothMove) {
       currentMode = rainbow;
     }else if (currentMode == rainbow){ // BUG: Wont switch away from rainbow, is stuck in that loop, will be fine for demo
       currentMode = simple;
@@ -66,6 +75,9 @@ void loop() {
       break;
     case (breathe):
       breatheEffectLoop();
+      break;
+    case (smoothMove):
+      smoothOperator();
       break;
     case (rainbow):
       rainbowWithPressure();
@@ -147,9 +159,37 @@ void rainbowWithPressure() {
   }
 }
 
+// Smooth Loop for pressure transitions:
+void smoothOperator() {
+  sensorValue = analogRead(A0);
+  uint32_t targetColor = MAX32 * sensorValue / MAXSensor;
+  if (smoothOP::curColor < targetColor) {
+    goingUP();
+  } else {
+    goingDOWN();
+  } 
+}
+
+void goingUP() {
+  delay(50);
+  
+  if(smoothOP::curColor < MAX32) {
+    setAllLights(++smoothOP::curColor);
+  }
+  return;
+}
+
+void goingDOWN() {
+  delay(50);
+  
+  if(smoothOP::curColor > 0) {
+    setAllLights(--smoothOP::curColor);
+  }
+  return;
+}
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
-// Helper function for rainbow
+// Helper function for rainbow and Smooth Operator
 uint32_t Wheel(byte WheelPos) {
   if(WheelPos < 85) {
    return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
