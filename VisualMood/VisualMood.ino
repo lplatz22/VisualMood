@@ -28,10 +28,7 @@ bool pushed = false;
 
 namespace smoothOP
 {
-  uint8_t curColorB = 0;
-  uint8_t curColorG = 0;
-  uint8_t curColorR = 0;
-  
+  uint32_t curColor = 0;
 }
 
 enum LightMode { 
