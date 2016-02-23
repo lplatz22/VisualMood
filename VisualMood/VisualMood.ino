@@ -16,6 +16,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(150, PIN, NEO_GRB + NEO_KHZ800);
 //Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
 //voltage = sensorValue * (5.0 / 1023.0);
 int sensorValue = 0;
+int sensorValue1 = 0;
 
 // start with increasing intensity in the color
 // once breatheTimer reaches 500, we start to decrease color intensity
@@ -34,7 +35,8 @@ namespace smoothOP
 enum LightMode { 
   simple, 
   breathe,
-  smoothMove, 
+  smoothMove,
+  pressure2x, 
   ripple,
   rainbow
 }; 
@@ -51,7 +53,10 @@ void setup() {
 }
 
 void loop() {
-  
+//  sensorValue = analogRead(A0);
+//  sensorValue1 = analogRead(A2);
+//  Serial.println("A0: " + sensorValue);
+//  Serial.println(sensorValue1);
   buttonState = digitalRead(buttonPin);
   if (!pushed && buttonState == HIGH) {
     pushed = true;
@@ -61,8 +66,10 @@ void loop() {
     }else if (currentMode == breathe){
       currentMode = smoothMove;
     }else if (currentMode == smoothMove) {
+      currentMode = pressure2x;
+    }else if (currentMode == pressure2x) {
       currentMode = ripple;
-    } else if (currentMode == ripple) {
+    }else if (currentMode == ripple) {
       currentMode = rainbow;
     }else if (currentMode == rainbow){ // BUG: Wont switch away from rainbow, is stuck in that loop, will be fine for demo
       currentMode = simple;
@@ -82,6 +89,9 @@ void loop() {
     case (smoothMove):
       smoothOperator();
       break;
+    case (pressure2x):
+      doublePressure();
+      break;
     case (ripple):
       rippleEffect();
       break;
@@ -91,6 +101,16 @@ void loop() {
     default:
       colorWithPressure();
   }
+}
+
+void doublePressure(){
+  sensorValue = analogRead(A0);
+  sensorValue1 = analogRead(A2);
+
+  float red = putInRange(sensorValue, 0, 1023);
+  float green = putInRange(sensorValue1, 0, 1000);
+  setAllLights(strip.Color(red, green, 0));
+  
 }
 
 // Moves between colors by mixing them as pressure changes 
@@ -236,6 +256,7 @@ void rippleEffect() {
       delay(wait);
     }
   }
+  currentMode = rainbow;
 }
 
 // higher pressure --> lower delay
