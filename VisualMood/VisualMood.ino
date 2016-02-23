@@ -57,6 +57,7 @@ void loop() {
 //  sensorValue1 = analogRead(A2);
 //  Serial.println("A0: " + sensorValue);
 //  Serial.println(sensorValue1);
+
   buttonState = digitalRead(buttonPin);
   if (!pushed && buttonState == HIGH) {
     pushed = true;
@@ -110,7 +111,6 @@ void doublePressure(){
   float red = putInRange(sensorValue, 0, 1023);
   float green = putInRange(sensorValue1, 0, 1000);
   setAllLights(strip.Color(red, green, 0));
-  
 }
 
 // Moves between colors by mixing them as pressure changes 
