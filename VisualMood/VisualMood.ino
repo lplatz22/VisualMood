@@ -19,8 +19,9 @@ int sensorValue = 0;
 int sensorValue1 = 0;
 
 // start with increasing intensity in the color
-// once breatheTimer reaches 500, we start to decrease color intensity
+// once breatheTimer reaches 425, we start to decrease color intensity
 int breatheTimer = 0;
+float breatheMax = 425.0;
 bool increaseIntensity = true;
 
 const int buttonPin = 2; // the number of the pushbutton pin
@@ -139,12 +140,12 @@ void breatheEffectLoop() {
   }else {
     breatheTimer--;
   }
-  if (breatheTimer == 500) { // start decreasing intensity of lights from here on out
+  if (breatheTimer == breatheMax) { // start decreasing intensity of lights from here on out
     increaseIntensity = false;
   }else if (breatheTimer == 0) { // start increasing intensity of lights from here on out
     increaseIntensity = true;
   }
-  float percent = (breatheTimer / 500.0); // percentage of breatheTimer gone through
+  float percent = (breatheTimer / breatheMax); // percentage of breatheTimer gone through
   if(sensorValue < 800){ // Green Base
     float green = putInRange(sensorValue, 0, 800);
     green *= percent;
@@ -161,6 +162,59 @@ void breatheEffectLoop() {
     red *= percent;
     blue *= percent;
     setAllLights(strip.Color(red, 0, blue));
+  }
+}
+
+//runs continuous rainbow effect, speeding up with higher pressure & breathing effect added
+void rainbowWithPressureAndBreathe() {
+  uint16_t i, j;
+  uint8_t wait = 30;
+
+  if (increaseIntensity) {
+    breatheTimer++;
+  }
+  else {
+    breatheTimer--;
+  }
+  
+  if (breatheTimer == breatheMax) { // start decreasing intensity of lights from here on out
+    increaseIntensity = false;
+  }
+  else if (breatheTimer == 0) { // start increasing intensity of lights from here on out
+    increaseIntensity = true;
+  }
+
+  float percent = (breatheTimer / breatheMax); // percentage of breatheTimer gone through
+  
+  for(j=0; j<256; j++) {
+    for(i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, WheelWithBreathe((i+j) & 255, percent));
+    }
+    
+    strip.show();
+    sensorValue = analogRead(A0);
+    
+    if (sensorValue <= 800){
+      wait = 80;
+    }
+    else if (800 < sensorValue && sensorValue <= 980){
+      wait = 25;
+    }
+    else if (980 < sensorValue){
+      wait = 0;
+    }
+    
+    buttonState = digitalRead(buttonPin);
+    
+    if (!pushed && buttonState == HIGH) {
+      pushed = true;
+      currentMode = simple; // BUG: Workaround, will work as long as simple is first, last is rainbow
+      Serial.println("Pressed!");
+      Serial.println(currentMode);
+      break;
+    }
+    
+    delay(wait);
   }
 }
 
@@ -305,6 +359,18 @@ uint32_t Wheel(byte WheelPos) {
   } else {
    WheelPos -= 170;
    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+}
+
+uint32_t WheelWithBreathe(byte WheelPos, float percent) {
+  if(WheelPos < 85) {
+   return strip.Color(WheelPos * 3 * percent, (255 - WheelPos * 3) * percent, 0);
+  } else if(WheelPos < 170) {
+   WheelPos -= 85;
+   return strip.Color((255 - WheelPos * 3) * percent, 0, WheelPos * 3 * percent);
+  } else {
+   WheelPos -= 170;
+   return strip.Color(0, WheelPos * 3 * percent, (255 - WheelPos * 3) * percent);
   }
 }
 
