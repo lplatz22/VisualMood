@@ -35,6 +35,7 @@ enum LightMode {
   simple, 
   breathe,
   smoothMove, 
+  ripple,
   rainbow
 }; 
 
@@ -60,6 +61,8 @@ void loop() {
     }else if (currentMode == breathe){
       currentMode = smoothMove;
     }else if (currentMode == smoothMove) {
+      currentMode = ripple;
+    } else if (currentMode == ripple) {
       currentMode = rainbow;
     }else if (currentMode == rainbow){ // BUG: Wont switch away from rainbow, is stuck in that loop, will be fine for demo
       currentMode = simple;
@@ -78,6 +81,9 @@ void loop() {
       break;
     case (smoothMove):
       smoothOperator();
+      break;
+    case (ripple):
+      rippleEffect();
       break;
     case (rainbow):
       rainbowWithPressure();
@@ -195,6 +201,74 @@ void goingDOWN() {
   }
   return;
 }
+
+// all lights will be set to one color.
+// there will be a ripple of another color travelling around the LEDs
+// the higher the pressure applied, the faster the ripple and the darker the color 
+int currentPixel = 0;
+void rippleEffect() {
+  int blue = strip.Color(0, 0, 255);
+  setAllLights(blue);
+
+  int numPixels = strip.numPixels();
+  int numLoopsOverAllPixels = 5;
+  uint16_t curPixel, prevPixel;
+  for (int j = 0; j < numLoopsOverAllPixels; j++) {
+    for(curPixel=0; curPixel<numPixels; curPixel++) {
+      
+      // get delay and color from pressure reading
+      sensorValue = analogRead(A0);
+      int wait = getDelayFromPressure(sensorValue);
+      int color = getColorFromPressure(sensorValue);
+      
+      // set current pixel to chosen color
+      strip.setPixelColor(curPixel, color);
+      
+      // set previous pixel back to blue
+      if (curPixel == 0) {
+        prevPixel = numPixels - 1;
+      } else {
+        prevPixel = curPixel - 1;
+      }
+      strip.setPixelColor(prevPixel, blue);
+      
+      delay(wait);
+    }
+  }
+}
+
+// higher pressure --> lower delay
+int getDelayFromPressure(int sensorValue) {
+  int wait;
+  if (sensorValue <= 800){
+      wait = 80;
+   }else if (800 < sensorValue && sensorValue <= 890){
+      wait = 40;
+   }else if (890 < sensorValue && sensorValue <= 980){
+      wait = 20;
+   }else if (980 < sensorValue) {
+      wait = 10;
+   }
+   return wait;
+}
+
+// higher pressure --> darker color
+int getColorFromPressure(int sensorValue) {
+  if(sensorValue <= 800){
+    int white = strip.Color(0, 0, 0);
+    return white;
+  }else if(800 < sensorValue && sensorValue <= 890){
+    int lightGreen = strip.Color(0, 80, 0);
+    return lightGreen;
+  }else if(890 < sensorValue && sensorValue <= 980){
+    int midGreen = strip.Color(0,  160, 0);
+    return midGreen;
+  }else if(980 < sensorValue){
+    int darkGreen = strip.Color(0, 255, 0);
+    return darkGreen;
+  }
+}
+
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
 // Helper function for rainbow and Smooth Operator
