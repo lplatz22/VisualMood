@@ -222,7 +222,6 @@ void rippleEffect() {
       int color = getColorFromPressure(sensorValue);
       
       int rippleWidth = 5;
-      strip.setPixelColor(curPixel, color);
       for (int k = 0; k < rippleWidth; k++) {
         strip.setPixelColor((curPixel+k) % (numPixels-1), color);
       }
