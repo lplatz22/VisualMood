@@ -155,6 +155,14 @@ void rainbowWithPressure() {
     }else if (980 < sensorValue){
       wait = 0;
     }
+    buttonState = digitalRead(buttonPin);
+    if (!pushed && buttonState == HIGH) {
+      pushed = true;
+      currentMode = simple; // BUG: Workaround, will work as long as simple is first, last is rainbow
+      Serial.println("Pressed!");
+      Serial.println(currentMode);
+      break;
+    }
     delay(wait);
   }
 }
@@ -171,7 +179,7 @@ void smoothOperator() {
 }
 
 void goingUP() {
-  delay(50);
+  delay(20);
   
   if(smoothOP::curColor < MAX32) {
     setAllLights(++smoothOP::curColor);
@@ -180,7 +188,7 @@ void goingUP() {
 }
 
 void goingDOWN() {
-  delay(50);
+  delay(8);
   
   if(smoothOP::curColor > 0) {
     setAllLights(--smoothOP::curColor);
