@@ -1,8 +1,8 @@
 #include <Adafruit_NeoPixel.h>
 
 #define PIN 6
-#define MAX32 4294967295
-#define MAXSensor 1023
+const uint32_t MAX32 = 4294967295;
+const double MAXSensor = 1023.0;
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = pin number (most are valid)
 // Parameter 3 = pixel type flags, add together as needed:
