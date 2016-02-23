@@ -204,7 +204,7 @@ void goingDOWN() {
 
 // all lights will be set to one color.
 // there will be a ripple of another color travelling around the LEDs
-// the higher the pressure applied, the faster the ripple and the darker the color 
+// the higher the pressure applied, the faster the ripple and the lighter the color 
 int currentPixel = 0;
 void rippleEffect() {
   int blue = strip.Color(0, 0, 255);
@@ -231,6 +231,7 @@ void rippleEffect() {
         prevPixel = curPixel - 1;
       }
       strip.setPixelColor(prevPixel, blue);
+      strip.show();
       
       delay(wait);
     }
@@ -252,20 +253,20 @@ int getDelayFromPressure(int sensorValue) {
    return wait;
 }
 
-// higher pressure --> darker color
+// higher pressure --> ligther color
 int getColorFromPressure(int sensorValue) {
   if(sensorValue <= 800){
-    int white = strip.Color(0, 0, 0);
-    return white;
-  }else if(800 < sensorValue && sensorValue <= 890){
-    int lightGreen = strip.Color(0, 80, 0);
-    return lightGreen;
-  }else if(890 < sensorValue && sensorValue <= 980){
-    int midGreen = strip.Color(0,  160, 0);
-    return midGreen;
-  }else if(980 < sensorValue){
     int darkGreen = strip.Color(0, 255, 0);
     return darkGreen;
+  }else if(800 < sensorValue && sensorValue <= 890){
+    int midGreen = strip.Color(0,  160, 0);
+    return midGreen;
+  }else if(890 < sensorValue && sensorValue <= 980){
+    int lightGreen = strip.Color(0, 80, 0);
+    return lightGreen;
+  }else if(980 < sensorValue){
+    int white = strip.Color(0, 0, 0);
+    return white;
   }
 }
 
