@@ -28,7 +28,10 @@ bool pushed = false;
 
 namespace smoothOP
 {
-  uint32_t curColor = 0;
+  uint8_t curColorB = 0;
+  uint8_t curColorG = 0;
+  uint8_t curColorR = 0;
+  
 }
 
 enum LightMode { 
@@ -170,7 +173,7 @@ void rainbowWithPressure() {
 // Smooth Loop for pressure transitions:
 void smoothOperator() {
   sensorValue = analogRead(A0);
-  uint32_t targetColor = MAX32 * sensorValue / MAXSensor;
+  uint32_t targetColor = toRGB(MAX32 * sensorValue / MAXSensor);
   if (smoothOP::curColor < targetColor) {
     goingUP();
   } else {
@@ -182,7 +185,7 @@ void goingUP() {
   delay(20);
   
   if(smoothOP::curColor < MAX32) {
-    setAllLights(++smoothOP::curColor);
+    setAllLights(toRGB(++smoothOP::curColor));
   }
   return;
 }
@@ -191,7 +194,7 @@ void goingDOWN() {
   delay(8);
   
   if(smoothOP::curColor > 0) {
-    setAllLights(--smoothOP::curColor);
+    setAllLights(toRGB(--smoothOP::curColor));
   }
   return;
 }
@@ -209,6 +212,24 @@ uint32_t Wheel(byte WheelPos) {
    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
   }
 }
+
+uint32_t toRGB(uint32_t inVal) {
+  if (inVal > 255) {
+    inVal | 255;
+  }
+  
+  if (inVal > 65535) {
+    inVal | 65535;
+  }
+ 
+  if (inVal > 16777215) {
+   inVal | 16777215;
+  }
+  
+  return inVal;
+}
+    
+    
 
 // squeeze any number in any range in between 0-255
 float putInRange(float value, float oldMin, float oldMax){
