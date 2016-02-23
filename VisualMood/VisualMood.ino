@@ -232,7 +232,7 @@ void rippleEffect() {
 
   int numPixels = strip.numPixels();
   int numLoopsOverAllPixels = 5;
-  uint16_t curPixel, prevPixel;
+  int curPixel, prevPixel;
   for (int j = 0; j < numLoopsOverAllPixels; j++) {
     for(curPixel=0; curPixel<numPixels; curPixel++) {
       
@@ -241,8 +241,10 @@ void rippleEffect() {
       int wait = getDelayFromPressure(sensorValue);
       int color = getColorFromPressure(sensorValue);
       
-      // set current pixel to chosen color
-      strip.setPixelColor(curPixel, color);
+      int rippleWidth = 5;
+      for (int k = 0; k < rippleWidth; k++) {
+        strip.setPixelColor((curPixel+k) % (numPixels-1), color);
+      }
       
       // set previous pixel back to blue
       if (curPixel == 0) {
@@ -280,7 +282,7 @@ int getColorFromPressure(int sensorValue) {
     int darkGreen = strip.Color(0, 255, 0);
     return darkGreen;
   }else if(800 < sensorValue && sensorValue <= 890){
-    int midGreen = strip.Color(0,  160, 0);
+    int midGreen = strip.Color(0, 160, 0);
     return midGreen;
   }else if(890 < sensorValue && sensorValue <= 980){
     int lightGreen = strip.Color(0, 80, 0);
