@@ -254,23 +254,23 @@ void rainbowWithPressure() {
 void smoothOperator() {
   sensorValue = analogRead(A2);
   if(sensorValue >= 765){
-    red = 255;
-    blue = 255;
-    green = 255;
+    smoothOP::red = 255;
+    smoothOP::blue = 255;
+    smoothOP::green = 255;
   }else if (sensorValue >= 510 && sensorValue < 765){
-    red = sensorValue - 510;
-    blue = 255;
-    green = 255;
+    smoothOP::red = sensorValue - 510;
+    smoothOP::blue = 255;
+    smoothOP::green = 255;
   }else if (sensorValue >= 255 && sensorValue < 510){
-    red = 0;
-    blue = sensorValue - 255;
-    green = 255;
+    smoothOP::red = 0;
+    smoothOP::blue = sensorValue - 255;
+    smoothOP::green = 255;
   }else if (sensorValue >= 0 && sensorValue < 255){
-    red = 0;
-    blue = 0;
-    green = sensorValue;
+    smoothOP::red = 0;
+    smoothOP::blue = 0;
+    smoothOP::green = sensorValue;
   }
-  uint32_t targetColor = strip.Color(red, green, blue);
+  uint32_t targetColor = strip.Color(smoothOP::red, smoothOP::green, smoothOP::blue);
   if (smoothOP::curColor < targetColor) {
     goingUP();
   } else {
