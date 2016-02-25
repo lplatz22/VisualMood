@@ -31,6 +31,9 @@ bool pushed = false;
 namespace smoothOP
 {
   uint32_t curColor = 0;
+  int red = 0;
+  int blue = 0;
+  int green = 0;
 }
 
 enum LightMode { 
@@ -249,8 +252,25 @@ void rainbowWithPressure() {
 
 // Smooth Loop for pressure transitions:
 void smoothOperator() {
-  sensorValue = analogRead(A0);
-  uint32_t targetColor = toRGB(MAX32 * sensorValue / MAXSensor);
+  sensorValue = analogRead(A2);
+  if(sensorValue >= 765){
+    red = 255;
+    blue = 255;
+    green = 255;
+  }else if (sensorValue >= 510 && sensorValue < 765){
+    red = sensorValue - 510;
+    blue = 255;
+    green = 255;
+  }else if (sensorValue >= 255 && sensorValue < 510){
+    red = 0;
+    blue = sensorValue - 255;
+    green = 255;
+  }else if (sensorValue >= 0 && sensorValue < 255){
+    red = 0;
+    blue = 0;
+    green = sensorValue;
+  }
+  uint32_t targetColor = strip.Color(red, green, blue);
   if (smoothOP::curColor < targetColor) {
     goingUP();
   } else {
@@ -260,7 +280,6 @@ void smoothOperator() {
 
 void goingUP() {
   delay(20);
-  
   if(smoothOP::curColor < MAX32) {
     setAllLights(toRGB(++smoothOP::curColor));
   }
@@ -269,7 +288,6 @@ void goingUP() {
 
 void goingDOWN() {
   delay(8);
-  
   if(smoothOP::curColor > 0) {
     setAllLights(toRGB(--smoothOP::curColor));
   }
