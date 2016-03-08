@@ -2,6 +2,7 @@
 
 #define PIN 6
 const uint32_t MAX32 = 4294967295;
+const uint32_t MAX24 = 16777216;
 const double MAXSensor = 1023.0;
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = pin number (most are valid)
@@ -29,7 +30,7 @@ int buttonState = 0;     // variable for reading the pushbutton status
 bool pushed = false;
 
 namespace smoothOP
-{
+{ 
   uint32_t curColor = 0;
   int red = 0;
   int blue = 0;
@@ -252,25 +253,16 @@ void rainbowWithPressure() {
 
 // Smooth Loop for pressure transitions:
 void smoothOperator() {
-  sensorValue = analogRead(A2);
-  if(sensorValue >= 765){
-    smoothOP::red = 255;
-    smoothOP::blue = 255;
-    smoothOP::green = 255;
-  }else if (sensorValue >= 510 && sensorValue < 765){
-    smoothOP::red = sensorValue - 510;
-    smoothOP::blue = 255;
-    smoothOP::green = 255;
-  }else if (sensorValue >= 255 && sensorValue < 510){
-    smoothOP::red = 0;
-    smoothOP::blue = sensorValue - 255;
-    smoothOP::green = 255;
-  }else if (sensorValue >= 0 && sensorValue < 255){
-    smoothOP::red = 0;
-    smoothOP::blue = 0;
-    smoothOP::green = sensorValue;
+  uint32_t curColor = strip.Color(smoothOP::red, smoothOP::green, smoothOP::blue);
+  uint32_t targetColor = analogRead(A0) * MAX24 / MAXSensor;
+  if (smoothOP::red) {
+    curColor = curColor || 255 || (255 << 8);
   }
-  uint32_t targetColor = strip.Color(smoothOP::red, smoothOP::green, smoothOP::blue);
+  
+  if (smoothOP::green) {
+    curColor = curColor || 255;
+  }
+  
   if (smoothOP::curColor < targetColor) {
     goingUP();
   } else {
@@ -279,19 +271,47 @@ void smoothOperator() {
 }
 
 void goingUP() {
-  delay(20);
-  if(smoothOP::curColor < MAX32) {
-    setAllLights(toRGB(++smoothOP::curColor));
+  Serial.println("GoingUP");
+  if(smoothOP::red < 255) {
+    setAllLights(increaseColor());
   }
   return;
 }
 
 void goingDOWN() {
-  delay(8);
-  if(smoothOP::curColor > 0) {
-    setAllLights(toRGB(--smoothOP::curColor));
+  Serial.println("GoingDown");
+  if(smoothOP::blue || smoothOP::red || smoothOP::green) {
+    setAllLights(decreaseColor());
   }
   return;
+}
+
+uint32_t increaseColor()
+{
+   if (smoothOP::green == 255 || smoothOP::red > 0) {
+     Serial.println("RED");
+     return strip.Color(++smoothOP::red, --smoothOP::green, smoothOP::blue);
+   } else if (smoothOP::blue == 255 || smoothOP::green > 0) {
+     Serial.println("GREEN");
+     return strip.Color(smoothOP::red, ++smoothOP::green, --smoothOP::blue);
+   } else {
+     Serial.println("BLUE");
+     return strip.Color(smoothOP::red, smoothOP::green, ++smoothOP::blue);
+   } 
+}
+
+uint32_t decreaseColor()
+{
+  if (smoothOP::red > 0) {
+    Serial.println("RED");
+    return strip.Color(--smoothOP::red, ++smoothOP::green, smoothOP::blue);
+  } else if (smoothOP::green > 0) {
+    Serial.println("GREEN");
+    return strip.Color(smoothOP::red, --smoothOP::green, ++smoothOP::blue);
+  } else {
+    Serial.println("BLUE");
+    return strip.Color(smoothOP::red, smoothOP::green, --smoothOP::blue);
+  }
 }
 
 // all lights will be set to one color.
