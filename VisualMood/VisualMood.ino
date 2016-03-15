@@ -26,9 +26,9 @@ int breatheTimer = 0;
 float breatheMax = 425.0;
 bool increaseIntensity = true;
 
-const int buttonPin = 7; // the number of the pushbutton pin
-int buttonState = 0;     // variable for reading the pushbutton status
-bool pushed = false;
+const int modeButtonPin = 7; // button to switch modes
+int modeButtonState = 0;     // variable for reading the pushbutton status
+bool modeButtonPushed = false;
 
 // initialize the library with the numbers of the interface pins
 // for the LED screen
@@ -42,7 +42,8 @@ namespace smoothOP
   int green = 0;
 }
 
-enum LightMode { 
+enum LightMode {
+  off, 
   simple, 
   breathe,
   smoothMove,
@@ -57,10 +58,11 @@ void setup() {
   Serial.begin(9600); //bits per second
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
-  pinMode(buttonPin, INPUT);
-  currentMode = simple;
+  pinMode(modeButtonPin, INPUT);
+  currentMode = off;
   Serial.println(currentMode);
   lcd.begin(16, 2); // set up the LCD's number of columns and rows:
+  lcd.setCursor(0, 0); //column 0, row 0
   lcd.print(make16Chars("Visual Mood!")); // Print a message to the LCD.
 }
 
@@ -70,11 +72,13 @@ void loop() {
 //  Serial.println("A0: " + sensorValue);
 //  Serial.println(sensorValue1);
   
-  buttonState = digitalRead(buttonPin);
-  if (!pushed && buttonState == HIGH) {
-    pushed = true;
+  modeButtonState = digitalRead(modeButtonPin);
+  if (!modeButtonPushed && modeButtonState == HIGH) {
+    modeButtonPushed = true;
     Serial.println("Mode Changed");
-    if(currentMode == simple){
+    if(currentMode == off){
+      currentMode = simple;
+    }else if(currentMode == simple){
       currentMode = breathe;
     }else if (currentMode == breathe){
       currentMode = smoothMove;
@@ -85,16 +89,20 @@ void loop() {
     }else if (currentMode == ripple) {
       currentMode = rainbow;
     }else if (currentMode == rainbow){
-      currentMode = simple;
+      currentMode = off;
     }
-  } else if (buttonState == LOW){
-    pushed = false;
+  } else if (modeButtonState == LOW){
+    modeButtonPushed = false;
   } 
 
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
   lcd.setCursor(0, 1);
   switch (currentMode){
+    case (off):
+      lcd.print(make16Chars("LED OFF"));
+      setAllLights(strip.Color(0, 0, 0));
+      break;
     case (simple):
       lcd.print(make16Chars("Simple"));
       colorWithPressure();
@@ -224,11 +232,11 @@ void rainbowWithPressureAndBreathe() {
       wait = 0;
     }
     
-    buttonState = digitalRead(buttonPin);
+    modeButtonState = digitalRead(modeButtonPin);
     
-    if (!pushed && buttonState == HIGH) {
-      pushed = true;
-      currentMode = simple; // BUG: Workaround, will work as long as simple is first, last is rainbow
+    if (!modeButtonPushed && modeButtonState == HIGH) {
+      modeButtonPushed = true;
+      currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
       Serial.println("Pressed!");
       Serial.println(currentMode);
       break;
@@ -255,10 +263,10 @@ void rainbowWithPressure() {
     }else if (980 < sensorValue){
       wait = 0;
     }
-    buttonState = digitalRead(buttonPin);
-    if (!pushed && buttonState == HIGH) {
-      pushed = true;
-      currentMode = simple; // BUG: Workaround, will work as long as simple is first, last is rainbow
+    modeButtonState = digitalRead(modeButtonPin);
+    if (!modeButtonPushed && modeButtonState == HIGH) {
+      modeButtonPushed = true;
+      currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
       Serial.println("Pressed!");
       Serial.println(currentMode);
       break;
