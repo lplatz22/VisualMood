@@ -30,6 +30,10 @@ const int modeButtonPin = 7; // button to switch modes
 int modeButtonState = 0;     // variable for reading the pushbutton status
 bool modeButtonPushed = false;
 
+const int optionButtonPin = 8; // button to switch modes
+int optionButtonState = 0;     // variable for reading the pushbutton status
+bool optionButtonPushed = false;
+
 // initialize the library with the numbers of the interface pins
 // for the LED screen
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
@@ -59,6 +63,7 @@ void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   pinMode(modeButtonPin, INPUT);
+  pinMode(optionButtonPin, INPUT);
   currentMode = off;
   Serial.println(currentMode);
   lcd.begin(16, 2); // set up the LCD's number of columns and rows:
@@ -67,10 +72,15 @@ void setup() {
 }
 
 void loop() {
-//  sensorValue = analogRead(A0);
-//  sensorValue1 = analogRead(A2);
-//  Serial.println("A0: " + sensorValue);
-//  Serial.println(sensorValue1);
+  optionButtonState = digitalRead(optionButtonPin);
+  if (!optionButtonPushed && optionButtonState == HIGH) {
+    optionButtonPushed = true;
+    
+    Serial.println("Option Changed"); //
+    
+  } else if (optionButtonState == LOW){
+    optionButtonPushed = false;
+  } 
   
   modeButtonState = digitalRead(modeButtonPin);
   if (!modeButtonPushed && modeButtonState == HIGH) {
