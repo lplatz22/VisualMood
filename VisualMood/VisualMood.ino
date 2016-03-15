@@ -2,6 +2,11 @@
 #include <LiquidCrystal.h>
 
 #define PIN 6
+
+#define SENSOR_1 A0 // Sensor_1 is used for all single controlled Modes
+#define SENSOR_2 A1
+#define SENSOR_3 A2
+
 const uint32_t MAX32 = 4294967295;
 const uint32_t MAX24 = 16777216;
 const double MAXSensor = 1023.0;
@@ -17,8 +22,9 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(150, PIN, NEO_GRB + NEO_KHZ800);
 //float voltage = 0.0;
 //Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
 //voltage = sensorValue * (5.0 / 1023.0);
-int sensorValue = 0;
-int sensorValue1 = 0;
+int sensorValue = 0; // Weak Sensor
+int sensorValue1 = 0; // Strong Sensor
+int sensorValue2 = 0; // Weak Sensor
 
 // start with increasing intensity in the color
 // once breatheTimer reaches 425, we start to decrease color intensity
@@ -144,18 +150,20 @@ void loop() {
 }
 
 void doublePressure(){
-  sensorValue = analogRead(A0);
-  sensorValue1 = analogRead(A2);
+  sensorValue = analogRead(SENSOR_1);
+  sensorValue1 = analogRead(SENSOR_2);
+  sensorValue2 = analogRead(SENSOR_3);
 
   float red = putInRange(sensorValue, 0, 1023);
-  float green = putInRange(sensorValue1, 0, 1000);
-  setAllLights(strip.Color(red, green, 0));
+  float green = putInRange(sensorValue1, 0, 1023);
+  float blue = putInRange(sensorValue2, 0, 1023);
+  setAllLights(strip.Color(red, green, blue));
 }
 
 // Moves between colors by mixing them as pressure changes 
 // instead of sharply transitioning
 void colorWithPressure(){
-  sensorValue = analogRead(A0);
+  sensorValue = analogRead(SENSOR_1);
   if(sensorValue <= 800){
     float green = putInRange(sensorValue, 0, 800);
     setAllLights(strip.Color(0, green, 0)); // Green
@@ -172,7 +180,7 @@ void colorWithPressure(){
 
 //breathe effect, with smooth transitions with pressure
 void breatheEffectLoop() {
-  sensorValue = analogRead(A0);
+  sensorValue = analogRead(SENSOR_1);
   if (increaseIntensity) {
     breatheTimer++;
   }else {
@@ -230,7 +238,7 @@ void rainbowWithPressureAndBreathe() {
     }
     
     strip.show();
-    sensorValue = analogRead(A0);
+    sensorValue = analogRead(SENSOR_1);
     
     if (sensorValue <= 800){
       wait = 80;
@@ -265,7 +273,7 @@ void rainbowWithPressure() {
       strip.setPixelColor(i, Wheel((i+j) & 255));
     }
     strip.show();
-    sensorValue = analogRead(A0);
+    sensorValue = analogRead(SENSOR_1);
     if (sensorValue <= 800){
       wait = 80;
     }else if (800 < sensorValue && sensorValue <= 980){
@@ -288,7 +296,7 @@ void rainbowWithPressure() {
 // Smooth Loop for pressure transitions:
 void smoothOperator() {
   uint32_t curColor = strip.Color(smoothOP::red, smoothOP::green, smoothOP::blue);
-  uint32_t targetColor = analogRead(A0) * MAX24 / MAXSensor;
+  uint32_t targetColor = analogRead(SENSOR_1) * MAX24 / MAXSensor;
   if (smoothOP::red) {
     curColor = curColor || 255 || (255 << 8);
   }
@@ -363,7 +371,7 @@ void rippleEffect() {
     for(curPixel=0; curPixel<numPixels; curPixel++) {
       
       // get delay and color from pressure reading
-      sensorValue = analogRead(A0);
+      sensorValue = analogRead(SENSOR_1);
       int wait = getDelayFromPressure(sensorValue);
       int color = getColorFromPressure(sensorValue);
       
