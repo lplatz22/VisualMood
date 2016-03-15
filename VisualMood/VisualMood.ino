@@ -1,4 +1,5 @@
 #include <Adafruit_NeoPixel.h>
+#include <LiquidCrystal.h>
 
 #define PIN 6
 const uint32_t MAX32 = 4294967295;
@@ -25,9 +26,13 @@ int breatheTimer = 0;
 float breatheMax = 425.0;
 bool increaseIntensity = true;
 
-const int buttonPin = 2; // the number of the pushbutton pin
+const int buttonPin = 7; // the number of the pushbutton pin
 int buttonState = 0;     // variable for reading the pushbutton status
 bool pushed = false;
+
+// initialize the library with the numbers of the interface pins
+// for the LED screen
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 namespace smoothOP
 { 
@@ -55,6 +60,8 @@ void setup() {
   pinMode(buttonPin, INPUT);
   currentMode = simple;
   Serial.println(currentMode);
+  lcd.begin(16, 2); // set up the LCD's number of columns and rows:
+  lcd.print(make16Chars("Visual Mood!")); // Print a message to the LCD.
 }
 
 void loop() {
@@ -62,11 +69,11 @@ void loop() {
 //  sensorValue1 = analogRead(A2);
 //  Serial.println("A0: " + sensorValue);
 //  Serial.println(sensorValue1);
-
+  
   buttonState = digitalRead(buttonPin);
   if (!pushed && buttonState == HIGH) {
     pushed = true;
-    Serial.println("Pressed!");
+    Serial.println("Mode Changed");
     if(currentMode == simple){
       currentMode = breathe;
     }else if (currentMode == breathe){
@@ -77,34 +84,43 @@ void loop() {
       currentMode = ripple;
     }else if (currentMode == ripple) {
       currentMode = rainbow;
-    }else if (currentMode == rainbow){ // BUG: Wont switch away from rainbow, is stuck in that loop, will be fine for demo
+    }else if (currentMode == rainbow){
       currentMode = simple;
     }
-    Serial.println(currentMode);
   } else if (buttonState == LOW){
     pushed = false;
   } 
-  
+
+  // set the cursor to column 0, line 1
+  // (note: line 1 is the second row, since counting begins with 0):
+  lcd.setCursor(0, 1);
   switch (currentMode){
     case (simple):
+      lcd.print(make16Chars("Simple"));
       colorWithPressure();
       break;
     case (breathe):
+      lcd.print(make16Chars("Breathe"));
       breatheEffectLoop();
       break;
     case (smoothMove):
+      lcd.print(make16Chars("Smoothe Move"));
       smoothOperator();
       break;
     case (pressure2x):
+      lcd.print(make16Chars("Color Mixing"));
       doublePressure();
       break;
     case (ripple):
+      lcd.print(make16Chars("Ripple"));
       rippleEffect();
       break;
     case (rainbow):
+      lcd.print(make16Chars("Rainbow"));
       rainbowWithPressure();
       break;
     default:
+      lcd.print(make16Chars("ERROR! - off/on"));
       colorWithPressure();
   }
 }
@@ -271,7 +287,7 @@ void smoothOperator() {
 }
 
 void goingUP() {
-  Serial.println("GoingUP");
+//  Serial.println("GoingUP");
   if(smoothOP::red < 255) {
     setAllLights(increaseColor());
   }
@@ -279,7 +295,7 @@ void goingUP() {
 }
 
 void goingDOWN() {
-  Serial.println("GoingDown");
+//  Serial.println("GoingDown");
   if(smoothOP::blue || smoothOP::red || smoothOP::green) {
     setAllLights(decreaseColor());
   }
@@ -443,5 +459,12 @@ void setAllLights(uint32_t c) {
       strip.setPixelColor(i, c);
   }
   strip.show();
+}
+
+String make16Chars(String input){
+  for(int i = input.length(); i < 16; i++){
+      input.concat(" ");
+  }
+  return input;
 }
 
