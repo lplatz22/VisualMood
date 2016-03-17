@@ -402,10 +402,9 @@ void rippleEffect() {
       }
       
       delay(wait);
-      }
-      if (doneWithRipple) {
-        break;
-      }
+    }
+    if (doneWithRipple) {
+      break;
     }
   }
   currentMode = rainbow;
