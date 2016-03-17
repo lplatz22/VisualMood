@@ -367,6 +367,7 @@ void rippleEffect() {
   int numPixels = strip.numPixels();
   int numLoopsOverAllPixels = 5;
   int curPixel, prevPixel;
+  bool doneWithRipple = false;
   for (int j = 0; j < numLoopsOverAllPixels; j++) {
     for(curPixel=0; curPixel<numPixels; curPixel++) {
       
@@ -388,8 +389,23 @@ void rippleEffect() {
       }
       strip.setPixelColor(prevPixel, blue);
       strip.show();
+
+      modeButtonState = digitalRead(modeButtonPin);
+    
+      if (!modeButtonPushed && modeButtonState == HIGH) {
+        modeButtonPushed = true;
+        currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
+        Serial.println("Pressed!");
+        Serial.println(currentMode);
+        doneWithRipple = true;
+        break;
+      }
       
       delay(wait);
+      }
+      if (doneWithRipple) {
+        break;
+      }
     }
   }
   currentMode = rainbow;
