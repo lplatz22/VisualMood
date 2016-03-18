@@ -232,17 +232,21 @@ void doublePressure(){
 // instead of sharply transitioning
 void colorWithPressure(){
   sensorValue = analogRead(SENSOR_1);
-  if(sensorValue <= 800){
-    float green = putInRange(sensorValue, 0, 800);
+  Serial.println(sensorValue);
+  if(sensorValue > 850 && sensorValue <= 945){
+    float green = putInRange(sensorValue, 850, 945);
     setAllLights(strip.Color(0, green, 0)); // Green
-  }else if(800 < sensorValue && sensorValue <= 980){
-    float blue = putInRange(sensorValue, 800, 980);
+  }else if(945 < sensorValue && sensorValue <= 995){
+    float blue = putInRange(sensorValue, 945, 995);
     float green = 255 - blue;
     setAllLights(strip.Color(0, green, blue)); // Blue
-  }else if(980 < sensorValue){
-    float red = putInRange(sensorValue, 980, 1023);
+  }else if(995 < sensorValue){
+    float red = putInRange(sensorValue, 995, 1020);
     float blue = 255 - red;
     setAllLights(strip.Color(red, 0, blue)); // Red
+  }
+  else {
+    setAllLights(strip.Color(0, 0, 0));
   }
 }
 
@@ -572,9 +576,11 @@ uint32_t toRGB(uint32_t inVal) {
 }
     
     
-
 // squeeze any number in any range in between 0-255
 float putInRange(float value, float oldMin, float oldMax){
+  if (value > oldMax) {
+    return 255;
+  }
   float oldRange = oldMax - oldMin; 
   float newRange = 255;
   return (((value - oldMin) * newRange) / oldRange);
