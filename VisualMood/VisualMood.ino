@@ -1,6 +1,4 @@
 #include <Adafruit_NeoPixel.h>
-
-#include <Adafruit_NeoPixel.h>
 #include <LiquidCrystal.h>
 
 #define PIN 6
@@ -46,6 +44,29 @@ bool optionButtonPushed = false;
 // for the LED screen
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
+class User{
+private:
+  String name;
+  int highPressure;
+  
+public:
+  User(String incomingName){
+    name = incomingName;
+    highPressure = 0;
+  }
+  int getHighPressure(){
+    return highPressure;
+  }
+  String getName(){
+    return name;
+  }
+};
+
+int currentUser = 0;
+const int MAXUSERS = 100;
+User* users[MAXUSERS];
+int totalUsers = 0;
+
 namespace smoothOP
 { 
   uint32_t curColor = 0;
@@ -77,14 +98,32 @@ void setup() {
   lcd.begin(16, 2); // set up the LCD's number of columns and rows:
   lcd.setCursor(0, 0); //column 0, row 0
   lcd.print(make16Chars("Visual Mood!")); // Print a message to the LCD.
+
+  //Set Up Users
+  User* luke = new User("Luke");
+  User* victor = new User("Victor");
+  User* rohan = new User("Rohan");
+  User* sam = new User("Sam");
+  //Add users to users[]
+  users[0] = luke;
+  totalUsers++;
+  users[1] = victor;
+  totalUsers++;
+  users[2] = rohan;
+  totalUsers++;
+  users[3] = sam;
+  totalUsers++;
 }
 
 void loop() {
   optionButtonState = digitalRead(optionButtonPin);
-  if (!optionButtonPushed && optionButtonState == HIGH) {
+  if (currentMode == smoothMove && !optionButtonPushed && optionButtonState == HIGH) {
     optionButtonPushed = true;
+
+    currentUser++;
+    currentUser = currentUser % totalUsers;
     
-    Serial.println("Option Changed"); //
+    Serial.println("Option Changed: " + currentUser); //
     
   } else if (optionButtonState == LOW){
     optionButtonPushed = false;
@@ -130,7 +169,10 @@ void loop() {
       breatheEffectLoop();
       break;
     case (smoothMove):
-      lcd.print(make16Chars("Smoothe Move"));
+      lcd.print(make16Chars("Training: " + users[currentUser]->getName()));
+      lcd.setCursor(0, 0);
+      lcd.print(make16Chars("High Score: " + (String)users[currentUser]->getHighPressure()));
+      lcd.setCursor(0, 1);
       smoothOperator();
       break;
     case (pressure2x):
@@ -335,13 +377,13 @@ void goingDOWN() {
 uint32_t increaseColor()
 {
    if (smoothOP::green == 255 || smoothOP::red > 0) {
-     Serial.println("RED");
+//     Serial.println("RED");
      return strip.Color(++smoothOP::red, --smoothOP::green, smoothOP::blue);
    } else if (smoothOP::blue == 255 || smoothOP::green > 0) {
-     Serial.println("GREEN");
+//     Serial.println("GREEN");
      return strip.Color(smoothOP::red, ++smoothOP::green, --smoothOP::blue);
    } else {
-     Serial.println("BLUE");
+//     Serial.println("BLUE");
      return strip.Color(smoothOP::red, smoothOP::green, ++smoothOP::blue);
    } 
 }
@@ -349,13 +391,13 @@ uint32_t increaseColor()
 uint32_t decreaseColor()
 {
   if (smoothOP::red > 0) {
-    Serial.println("RED");
+//    Serial.println("RED");
     return strip.Color(--smoothOP::red, ++smoothOP::green, smoothOP::blue);
   } else if (smoothOP::green > 0) {
-    Serial.println("GREEN");
+//    Serial.println("GREEN");
     return strip.Color(smoothOP::red, --smoothOP::green, ++smoothOP::blue);
   } else {
-    Serial.println("BLUE");
+//    Serial.println("BLUE");
     return strip.Color(smoothOP::red, smoothOP::green, --smoothOP::blue);
   }
 }
