@@ -1,4 +1,6 @@
 #include <Adafruit_NeoPixel.h>
+
+#include <Adafruit_NeoPixel.h>
 #include <LiquidCrystal.h>
 
 #define PIN 6
@@ -288,6 +290,8 @@ void rainbowWithPressure() {
       Serial.println("Pressed!");
       Serial.println(currentMode);
       break;
+    } else if (modeButtonState == LOW) {
+      modeButtonPushed = false;
     }
     delay(wait);
   }
@@ -356,90 +360,85 @@ uint32_t decreaseColor()
   }
 }
 
-// all lights will be set to one color.
-// there will be a ripple of another color travelling around the LEDs
-// the higher the pressure applied, the faster the ripple and the lighter the color 
+// ripple based off the Wheel function.
+// the higher the pressure applied, the faster the ripple, and thus the faster
+// it goes through the wheel. 
+// At each new pixel, the wheel value is increased by 1.
 int currentPixel = 0;
 void rippleEffect() {
-  int blue = strip.Color(0, 0, 255);
-  setAllLights(blue);
-
+  // modeButtonPushed = true, need to wait for it to go LOW,
+  // then we know its ready to be pushed again
+  
+  int color = 0;
   int numPixels = strip.numPixels();
-  int numLoopsOverAllPixels = 5;
-  int curPixel, prevPixel;
-  bool doneWithRipple = false;
-  for (int j = 0; j < numLoopsOverAllPixels; j++) {
-    for(curPixel=0; curPixel<numPixels; curPixel++) {
+  boolean doneWithRipple = false;
+  while (1) {
+    for(int curPixel=0; curPixel<numPixels; curPixel++) {
       
       // get delay and color from pressure reading
       sensorValue = analogRead(SENSOR_1);
       int wait = getDelayFromPressure(sensorValue);
-      int color = getColorFromPressure(sensorValue);
-      
-      int rippleWidth = 5;
-      for (int k = 0; k < rippleWidth; k++) {
-        strip.setPixelColor((curPixel+k) % (numPixels-1), color);
+      for (int i = 0; i <= curPixel; i++) {
+        strip.setPixelColor(curPixel, Wheel(color));
       }
-      
-      // set previous pixel back to blue
-      if (curPixel == 0) {
-        prevPixel = numPixels - 1;
-      } else {
-        prevPixel = curPixel - 1;
-      }
-      strip.setPixelColor(prevPixel, blue);
       strip.show();
+
+      // only change color every 4 pixels
+      if (curPixel % 4 == 0) {
+        if (color == 255) {
+          color = 0;
+        } else {
+          color++;
+        }
+      }
 
       modeButtonState = digitalRead(modeButtonPin);
     
       if (!modeButtonPushed && modeButtonState == HIGH) {
         modeButtonPushed = true;
-        currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
-        Serial.println("Pressed!");
-        Serial.println(currentMode);
+        currentMode = rainbow;
         doneWithRipple = true;
         break;
-      }
-      
+      } else if (modeButtonState == LOW){
+        modeButtonPushed = false;
+      } 
+
       delay(wait);
     }
     if (doneWithRipple) {
       break;
     }
   }
-  currentMode = rainbow;
 }
 
 // higher pressure --> lower delay
 int getDelayFromPressure(int sensorValue) {
   int wait;
   if (sensorValue <= 800){
-      wait = 80;
+      wait = 50;
    }else if (800 < sensorValue && sensorValue <= 890){
-      wait = 40;
+      wait = 30;
    }else if (890 < sensorValue && sensorValue <= 980){
-      wait = 20;
-   }else if (980 < sensorValue) {
       wait = 10;
+   }else if (980 < sensorValue) {
+      wait = 5;
    }
    return wait;
 }
 
 // higher pressure --> ligther color
-int getColorFromPressure(int sensorValue) {
+int getColorFromPressure(int sensorValue, int currentColor) {
+  int nextColor = currentColor;
   if(sensorValue <= 800){
-    int darkGreen = strip.Color(0, 255, 0);
-    return darkGreen;
+    nextColor += 1;
   }else if(800 < sensorValue && sensorValue <= 890){
-    int midGreen = strip.Color(0, 160, 0);
-    return midGreen;
+    nextColor += 3;
   }else if(890 < sensorValue && sensorValue <= 980){
-    int lightGreen = strip.Color(0, 80, 0);
-    return lightGreen;
+    nextColor += 5;
   }else if(980 < sensorValue){
-    int white = strip.Color(0, 0, 0);
-    return white;
+    nextColor += 7;
   }
+  return nextColor;
 }
 
 // Input a value 0 to 255 to get a color value.
