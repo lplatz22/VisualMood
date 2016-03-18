@@ -47,18 +47,33 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 class User{
 private:
   String name;
-  int highPressure;
+  float highPressure;
+  int highDuration;
   
 public:
   User(String incomingName){
     name = incomingName;
     highPressure = 0;
+    highDuration = 0;
   }
-  int getHighPressure(){
+  float getHighPressure(){
     return highPressure;
+  }
+  int getHighDuration(){
+    return highDuration;
   }
   String getName(){
     return name;
+  }
+
+  void setHighTime(int seconds){
+    highDuration = seconds;
+  }
+  void setHighPressure(float highPressureIn){
+    highPressure = highPressureIn;
+  }
+  void setName(String NameIn){
+    name = NameIn;
   }
 };
 
@@ -80,6 +95,7 @@ enum LightMode {
   simple, 
   breathe,
   smoothMove,
+  maxOut,
   pressure2x, 
   ripple,
   rainbow
@@ -117,14 +133,10 @@ void setup() {
 
 void loop() {
   optionButtonState = digitalRead(optionButtonPin);
-  if (currentMode == smoothMove && !optionButtonPushed && optionButtonState == HIGH) {
+  if (!optionButtonPushed && optionButtonState == HIGH) {
     optionButtonPushed = true;
-
     currentUser++;
     currentUser = currentUser % totalUsers;
-    
-    Serial.println("Option Changed: " + currentUser); //
-    
   } else if (optionButtonState == LOW){
     optionButtonPushed = false;
   } 
@@ -140,6 +152,8 @@ void loop() {
     }else if (currentMode == breathe){
       currentMode = smoothMove;
     }else if (currentMode == smoothMove) {
+      currentMode = maxOut;
+    }else if (currentMode == maxOut) {
       currentMode = pressure2x;
     }else if (currentMode == pressure2x) {
       currentMode = ripple;
@@ -175,7 +189,17 @@ void loop() {
       lcd.setCursor(0, 1);
       smoothOperator();
       break;
+    case (maxOut):
+      lcd.print(make16Chars("Max Out: " + users[currentUser]->getName()));
+      lcd.setCursor(0, 0);
+      lcd.print(make16Chars("High Score: " + (String)users[currentUser]->getHighPressure()));
+      lcd.setCursor(0, 1);
+      maxOutTraining();
+      break;
     case (pressure2x):
+      lcd.setCursor(0, 0);
+      lcd.print(make16Chars("Visual Mood!"));
+      lcd.setCursor(0, 1);
       lcd.print(make16Chars("Color Mixing"));
       doublePressure();
       break;
@@ -372,6 +396,27 @@ void goingDOWN() {
     setAllLights(decreaseColor());
   }
   return;
+}
+
+void maxOutTraining(){
+  sensorValue = analogRead(SENSOR_1);
+  Serial.println(sensorValue/1023.0 * 22.0);
+  if(sensorValue <= 800){
+    float green = putInRange(sensorValue, 0, 800);
+    setAllLights(strip.Color(0, green, 0)); // Green
+  }else if(800 < sensorValue && sensorValue <= 980){
+    float blue = putInRange(sensorValue, 800, 980);
+    float green = 255 - blue;
+    setAllLights(strip.Color(0, green, blue)); // Blue
+  }else if(980 < sensorValue){
+    float red = putInRange(sensorValue, 980, 1023);
+    float blue = 255 - red;
+    setAllLights(strip.Color(red, 0, blue)); // Red
+  }
+  
+  if(users[currentUser]->getHighPressure() < (sensorValue/1023.0 * 22.0)){
+      users[currentUser]->setHighPressure((sensorValue/1023.0 * 22.0));
+  }
 }
 
 uint32_t increaseColor()
