@@ -17,7 +17,7 @@ const double MAXSensor = 1023.0;
 //   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(150, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(130, PIN, NEO_GRB + NEO_KHZ800);
 
 //float voltage = 0.0;
 //Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
@@ -217,22 +217,35 @@ void loop() {
   }
 }
 
-void doublePressure(){
-  sensorValue = analogRead(SENSOR_1);
-  sensorValue1 = analogRead(SENSOR_2);
-  sensorValue2 = analogRead(SENSOR_3);
+int getSensorValue(uint8_t pin, int minValue){
+  int sensorVal = analogRead(pin);
+  if (sensorVal < minValue){
+    return 0.0;
+  }else{
+    return sensorVal;
+  }
+}
 
-  float red = putInRange(sensorValue, 0, 1023);
-  float green = putInRange(sensorValue1, 0, 1023);
-  float blue = putInRange(sensorValue2, 0, 1023);
+int getSensorValue(uint8_t pin){
+  return analogRead(pin);
+}
+
+void doublePressure(){
+  sensorValue = getSensorValue(SENSOR_1, 100);
+  sensorValue1 = getSensorValue(SENSOR_2, 100);
+  sensorValue2 = getSensorValue(SENSOR_3, 100);
+
+  float red = putInRange(sensorValue, 100, 1023);
+  float green = putInRange(sensorValue1, 100, 1023);
+  float blue = putInRange(sensorValue2, 100, 1023);
   setAllLights(strip.Color(red, green, blue));
 }
 
 // Moves between colors by mixing them as pressure changes 
 // instead of sharply transitioning
 void colorWithPressure(){
-  sensorValue = analogRead(SENSOR_1);
-  Serial.println(sensorValue);
+  sensorValue = getSensorValue(SENSOR_1, 400);
+  
   if(sensorValue > 850 && sensorValue <= 945){
     float green = putInRange(sensorValue, 850, 945);
     setAllLights(strip.Color(0, green, 0)); // Green
@@ -252,7 +265,7 @@ void colorWithPressure(){
 
 //breathe effect, with smooth transitions with pressure
 void breatheEffectLoop() {
-  sensorValue = analogRead(SENSOR_1);
+  sensorValue = getSensorValue(SENSOR_1, 100);
   if (increaseIntensity) {
     breatheTimer++;
   }else {
@@ -283,76 +296,16 @@ void breatheEffectLoop() {
   }
 }
 
-//runs continuous rainbow effect, speeding up with higher pressure & breathing effect added
-void rainbowWithPressureAndBreathe() {
-  uint16_t i, j;
-  uint8_t wait = 30;
-
-  if (increaseIntensity) {
-    breatheTimer++;
-  }
-  else {
-    breatheTimer--;
-  }
-  
-  if (breatheTimer == breatheMax) { // start decreasing intensity of lights from here on out
-    increaseIntensity = false;
-  }
-  else if (breatheTimer == 0) { // start increasing intensity of lights from here on out
-    increaseIntensity = true;
-  }
-
-  float percent = (breatheTimer / breatheMax); // percentage of breatheTimer gone through
-  
-  for(j=0; j<256; j++) {
-    for(i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, WheelWithBreathe((i+j) & 255, percent));
-    }
-    
-    strip.show();
-    sensorValue = analogRead(SENSOR_1);
-    
-    if (sensorValue <= 800){
-      wait = 80;
-    }
-    else if (800 < sensorValue && sensorValue <= 980){
-      wait = 25;
-    }
-    else if (980 < sensorValue){
-      wait = 0;
-    }
-    
-    modeButtonState = digitalRead(modeButtonPin);
-    
-    if (!modeButtonPushed && modeButtonState == HIGH) {
-      modeButtonPushed = true;
-      currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
-      Serial.println("Pressed!");
-      Serial.println(currentMode);
-      break;
-    }
-    
-    delay(wait);
-  }
-}
-
 //runs continuous rainbow effect, speeding up with higher pressure
 void rainbowWithPressure() {
   uint16_t i, j;
-  uint8_t wait = 30;
   for(j=0; j<256; j++) {
     for(i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel((i+j) & 255));
     }
     strip.show();
-    sensorValue = analogRead(SENSOR_1);
-    if (sensorValue <= 800){
-      wait = 80;
-    }else if (800 < sensorValue && sensorValue <= 980){
-      wait = 25;
-    }else if (980 < sensorValue){
-      wait = 0;
-    }
+    sensorValue = getSensorValue(SENSOR_1);
+    uint8_t wait = getDelayFromPressure(sensorValue);
     modeButtonState = digitalRead(modeButtonPin);
     if (!modeButtonPushed && modeButtonState == HIGH) {
       modeButtonPushed = true;
@@ -367,10 +320,34 @@ void rainbowWithPressure() {
   }
 }
 
+// Slightly different, this makes the rainbow equally distributed throughout
+void rainbowCycle() {
+  uint16_t i, j;
+  for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
+    for(i=0; i< strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+    }
+    strip.show();
+    sensorValue = getSensorValue(SENSOR_1);
+    uint8_t wait = getDelayFromPressure(sensorValue);
+    modeButtonState = digitalRead(modeButtonPin);
+    if (!modeButtonPushed && modeButtonState == HIGH) {
+      modeButtonPushed = true;
+      currentMode = rainbow; // BUG: Workaround, will work as long as simple is first, last is rainbow
+      Serial.println("Pressed!");
+      Serial.println(currentMode);
+      break;
+    } else if (modeButtonState == LOW) {
+      modeButtonPushed = false;
+    }
+    delay(wait);
+  }
+}
+
 // Smooth Loop for pressure transitions:
 void smoothOperator() {
   uint32_t curColor = strip.Color(smoothOP::red, smoothOP::green, smoothOP::blue);
-  uint32_t targetColor = analogRead(SENSOR_1) * MAX24 / MAXSensor;
+  uint32_t targetColor = getSensorValue(SENSOR_1) * MAX24 / MAXSensor;
   if (smoothOP::red) {
     curColor = curColor || 255 || (255 << 8);
   }
@@ -403,8 +380,7 @@ void goingDOWN() {
 }
 
 void maxOutTraining(){
-  sensorValue = analogRead(SENSOR_1);
-  Serial.println(sensorValue/1023.0 * 22.0);
+  sensorValue = getSensorValue(SENSOR_1, 100);
   if(sensorValue <= 800){
     float green = putInRange(sensorValue, 0, 800);
     setAllLights(strip.Color(0, green, 0)); // Green
@@ -459,7 +435,6 @@ int currentPixel = 0;
 void rippleEffect() {
   // modeButtonPushed = true, need to wait for it to go LOW,
   // then we know its ready to be pushed again
-  
   int color = 0;
   int numPixels = strip.numPixels();
   boolean doneWithRipple = false;
@@ -467,7 +442,7 @@ void rippleEffect() {
     for(int curPixel=0; curPixel<numPixels; curPixel++) {
       
       // get delay and color from pressure reading
-      sensorValue = analogRead(SENSOR_1);
+      sensorValue = getSensorValue(SENSOR_1);
       int wait = getDelayFromPressure(sensorValue);
       for (int i = 0; i <= curPixel; i++) {
         strip.setPixelColor(curPixel, Wheel(color));
@@ -506,11 +481,11 @@ void rippleEffect() {
 int getDelayFromPressure(int sensorValue) {
   int wait;
   if (sensorValue <= 800){
-      wait = 50;
+      wait = 80;
    }else if (800 < sensorValue && sensorValue <= 890){
-      wait = 30;
+      wait = 40;
    }else if (890 < sensorValue && sensorValue <= 980){
-      wait = 10;
+      wait = 20;
    }else if (980 < sensorValue) {
       wait = 5;
    }
@@ -580,6 +555,9 @@ uint32_t toRGB(uint32_t inVal) {
 float putInRange(float value, float oldMin, float oldMax){
   if (value > oldMax) {
     return 255;
+  }
+  if (value < oldMin) {
+    return 0;
   }
   float oldRange = oldMax - oldMin; 
   float newRange = 255;
