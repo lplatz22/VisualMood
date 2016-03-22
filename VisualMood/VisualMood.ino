@@ -40,6 +40,8 @@ const int optionButtonPin = 8; // button to switch modes
 int optionButtonState = 0;     // variable for reading the pushbutton status
 bool optionButtonPushed = false;
 
+int rainbowStyle = 0;
+
 // initialize the library with the numbers of the interface pins
 // for the LED screen
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
@@ -135,8 +137,14 @@ void loop() {
   optionButtonState = digitalRead(optionButtonPin);
   if (!optionButtonPushed && optionButtonState == HIGH) {
     optionButtonPushed = true;
-    currentUser++;
-    currentUser = currentUser % totalUsers;
+    if (currentMode == smoothMove || currentMode == maxOut){
+      currentUser++;
+      currentUser = currentUser % totalUsers;
+    }else if (currentMode == rainbow){
+      Serial.println(rainbowStyle);
+      rainbowStyle++;
+      rainbowStyle = rainbowStyle % 1;
+    }
   } else if (optionButtonState == LOW){
     optionButtonPushed = false;
   } 
@@ -208,8 +216,13 @@ void loop() {
       rippleEffect();
       break;
     case (rainbow):
-      lcd.print(make16Chars("Rainbow"));
-      rainbowWithPressure();
+      if(rainbowStyle == 0){
+        lcd.print(make16Chars("Rainbow - Reg"));
+        rainbowWithPressure();
+      }else{
+        lcd.print(make16Chars("Rainbow - Cycle"));
+        rainbowCycle();
+      }
       break;
     default:
       lcd.print(make16Chars("ERROR! - off/on"));
@@ -306,6 +319,18 @@ void rainbowWithPressure() {
     strip.show();
     sensorValue = getSensorValue(SENSOR_1);
     uint8_t wait = getDelayFromPressure(sensorValue);
+
+    optionButtonState = digitalRead(optionButtonPin);
+    if (!optionButtonPushed && optionButtonState == HIGH) {
+      optionButtonPushed = true;
+      Serial.println(rainbowStyle);
+      rainbowStyle = 1;
+      lcd.print(make16Chars("Rainbow - Cycle"));
+      break;
+    } else if (optionButtonState == LOW){
+      optionButtonPushed = false;
+    } 
+
     modeButtonState = digitalRead(modeButtonPin);
     if (!modeButtonPushed && modeButtonState == HIGH) {
       modeButtonPushed = true;
@@ -330,17 +355,28 @@ void rainbowCycle() {
     strip.show();
     sensorValue = getSensorValue(SENSOR_1);
     uint8_t wait = getDelayFromPressure(sensorValue);
+
+    optionButtonState = digitalRead(optionButtonPin);
+    if (!optionButtonPushed && optionButtonState == HIGH) {
+      optionButtonPushed = true;
+      Serial.println(rainbowStyle);
+      rainbowStyle = 0;
+      break;
+    } else if (optionButtonState == LOW){
+      optionButtonPushed = false;
+    } 
+    
     modeButtonState = digitalRead(modeButtonPin);
     if (!modeButtonPushed && modeButtonState == HIGH) {
       modeButtonPushed = true;
-      currentMode = rainbow; // BUG: Workaround, will work as long as simple is first, last is rainbow
+      currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
       Serial.println("Pressed!");
       Serial.println(currentMode);
       break;
     } else if (modeButtonState == LOW) {
       modeButtonPushed = false;
     }
-    delay(wait);
+    delay(wait / 2);
   }
 }
 
