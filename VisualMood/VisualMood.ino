@@ -430,19 +430,21 @@ void goingDOWN() {
 
 void maxOutTraining(){
   sensorValue = getSensorValue(SENSOR_1, 100);
-  int jump = 15; //Smaller = faster transistions
-  uint32_t currentColor = strip.getPixelColor(129);
-  if(sensorValue <= 800){
-    float green = putInRange(sensorValue, 0, 800);
-    transitionAllLights(strip.Color(0, green, 0), currentColor, jump);
-  }else if(800 < sensorValue && sensorValue <= 980){
-    float blue = putInRange(sensorValue, 800, 980);
-    float green = 255 - blue;
-    transitionAllLights(strip.Color(0, green, blue), currentColor, jump);
-  }else if(980 < sensorValue){
-    float red = putInRange(sensorValue, 980, 1023);
-    float blue = 255 - red;
-    transitionAllLights(strip.Color(red, 0, blue), currentColor, jump);
+  float meterHeight = putInRange(sensorValue, 100, 1023, 0, 130);
+
+  for (int i = 0; i < meterHeight; i++){
+    if(i <= 20){
+      strip.setPixelColor(i, strip.Color(0,255,0));
+    }else if (i > 20 && i <= 80){
+      strip.setPixelColor(i, strip.Color(255,255,0));
+    }else if (i > 80){
+      strip.setPixelColor(i, strip.Color(255,0,0));
+    }
+    strip.show();
+  }
+  for (int i = strip.numPixels() - 1; i >= meterHeight; i--){
+    strip.setPixelColor(i, strip.Color(0,0,0));
+    strip.show();
   }
 
   float calibrateVal = -12.0;
@@ -713,6 +715,18 @@ float putInRange(float value, float oldMin, float oldMax){
   float oldRange = oldMax - oldMin; 
   float newRange = 255;
   return (((value - oldMin) * newRange) / oldRange);
+}
+
+float putInRange(float value, float oldMin, float oldMax, float newMin, float newMax){
+  if (value > oldMax) {
+    return newMax;
+  }
+  if (value < oldMin) {
+    return newMin;
+  }
+  float oldRange = oldMax - oldMin; 
+  float newRange = newMax - newMin;
+  return (((value - oldMin) * newRange) / oldRange) + newMin;
 }
 
 // Sets all lights on the strip to color c,
