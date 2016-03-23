@@ -100,6 +100,7 @@ enum LightMode {
   maxOut,
   pressure2x,
   painting, 
+  colorWave,
   ripple,
   rainbow
 }; 
@@ -167,6 +168,8 @@ void loop() {
     }else if (currentMode == pressure2x) {
       currentMode = painting;
     }else if (currentMode == painting) {
+      currentMode = colorWave;
+    }else if (currentMode == colorWave) {
       currentMode = ripple;
     }else if (currentMode == ripple) {
       currentMode = rainbow;
@@ -221,6 +224,10 @@ void loop() {
     case (ripple):
       lcd.print(make16Chars("Ripple"));
       rippleEffect();
+      break;
+    case (colorWave):
+      lcd.print(make16Chars("Color Wave"));
+      colorMixWave();
       break;
     case (rainbow):
       if(rainbowStyle == 0){
@@ -531,6 +538,37 @@ void rippleEffect() {
   }
 }
 
+//squeeze red/blue/green: send that color from 0->130, or until it stops recieving an input.
+//on stoppage of input, keep wave length, send until its consumed by the 130th pixel
+//basically, send a pixel of each color every loop that something is inputted,
+//constantly be moving every pixel to 0->130
+void colorMixWave(){
+  //Rotate every pixel, every frame (maybe start doing this every 2nd,3rd)
+  for(int i = strip.numPixels() - 1; i >= 0; i--){
+    uint32_t currColor = strip.getPixelColor(i);
+    strip.setPixelColor(i, strip.Color(0,0,0));
+    if(i+1 < strip.numPixels() - 1){
+      strip.setPixelColor(i + 1, currColor);
+    }
+  }
+
+  sensorValue = getSensorValue(SENSOR_1, 200);
+  sensorValue1 = getSensorValue(SENSOR_2, 100);
+  sensorValue2 = getSensorValue(SENSOR_3, 100);
+  uint8_t red = 0;
+  uint8_t blue = 0;
+  uint8_t green = 0;
+  if(sensorValue > 0){
+    red = putInRange(sensorValue, 100, 1023);
+  }if(sensorValue1 > 0){
+    green = putInRange(sensorValue1, 100, 1023);
+  }if(sensorValue2 > 0){
+    blue = putInRange(sensorValue2, 100, 1023);
+  }
+  strip.setPixelColor(0, strip.Color(red, green, blue));
+  strip.show();
+}
+
 
 //when a color is squeezed, pick a random pixel and direction (back if within 10 or so of the end)
 //those pixels are then in an array with 5 second timers set on all of them
@@ -551,8 +589,6 @@ void colorMixPaint(){
   sensorValue = getSensorValue(SENSOR_1, 300);
   sensorValue1 = getSensorValue(SENSOR_2, 100);
   sensorValue2 = getSensorValue(SENSOR_3, 100);
-  Serial.println(sensorValue);
-  Serial.println(sensorValue2);
 
   if(sensorValue > 0){
     redChosen = true;
