@@ -98,7 +98,8 @@ enum LightMode {
   breathe,
   smoothMove,
   maxOut,
-  pressure2x, 
+  pressure2x,
+  painting, 
   ripple,
   rainbow
 }; 
@@ -164,6 +165,8 @@ void loop() {
     }else if (currentMode == maxOut) {
       currentMode = pressure2x;
     }else if (currentMode == pressure2x) {
+      currentMode = painting;
+    }else if (currentMode == painting) {
       currentMode = ripple;
     }else if (currentMode == ripple) {
       currentMode = rainbow;
@@ -211,6 +214,10 @@ void loop() {
       lcd.print(make16Chars("Color Mixing"));
       doublePressure();
       break;
+    case (painting):
+      lcd.print(make16Chars("Color Painting"));
+      colorMixPaint();
+      break;
     case (ripple):
       lcd.print(make16Chars("Ripple"));
       rippleEffect();
@@ -251,30 +258,34 @@ void doublePressure(){
   float red = putInRange(sensorValue, 100, 1023);
   float green = putInRange(sensorValue1, 100, 1023);
   float blue = putInRange(sensorValue2, 100, 1023);
-  setAllLights(strip.Color(red, green, blue));
+  
+  int jump = 15;
+  uint32_t currentColor = strip.getPixelColor(129);
+  transitionAllLights(strip.Color(red, green, blue), currentColor, jump);
 }
 
 // Moves between colors by mixing them as pressure changes 
-// instead of sharply transitioning
 void colorWithPressure(){
   sensorValue = getSensorValue(SENSOR_1, 400);
-  
+  uint32_t currentColor = strip.getPixelColor(129);
+  int jump = 15; //Smaller = faster transistions
   if(sensorValue > 850 && sensorValue <= 945){
     float green = putInRange(sensorValue, 850, 945);
-    setAllLights(strip.Color(0, green, 0)); // Green
+    transitionAllLights(strip.Color(0, green, 0), currentColor, jump);
   }else if(945 < sensorValue && sensorValue <= 995){
     float blue = putInRange(sensorValue, 945, 995);
     float green = 255 - blue;
-    setAllLights(strip.Color(0, green, blue)); // Blue
+    transitionAllLights(strip.Color(0, green, blue), currentColor, jump);
   }else if(995 < sensorValue){
     float red = putInRange(sensorValue, 995, 1020);
     float blue = 255 - red;
-    setAllLights(strip.Color(red, 0, blue)); // Red
+    transitionAllLights(strip.Color(red, 0, blue), currentColor, jump);
   }
   else {
-    setAllLights(strip.Color(0, 0, 0));
+    transitionAllLights(strip.Color(0, 0, 0), currentColor, jump);
   }
 }
+
 
 //breathe effect, with smooth transitions with pressure
 void breatheEffectLoop() {
@@ -290,22 +301,24 @@ void breatheEffectLoop() {
     increaseIntensity = true;
   }
   float percent = (breatheTimer / breatheMax); // percentage of breatheTimer gone through
+  uint32_t currentColor = strip.getPixelColor(129);
+  int jump = 15; //Smaller = faster transistions
   if(sensorValue < 800){ // Green Base
     float green = putInRange(sensorValue, 0, 800);
     green *= percent;
-    setAllLights(strip.Color(0, green, 0));
+    transitionAllLights(strip.Color(0, green, 0), currentColor, jump);
   }else if(800 <= sensorValue && sensorValue < 980){ // Blue Base
     float blue = putInRange(sensorValue, 800, 980);
     float green = 255 - blue;
     blue *= percent;
     green *= percent;
-    setAllLights(strip.Color(0, green, blue));
+    transitionAllLights(strip.Color(0, green, blue), currentColor, jump);
   }else if(980 <= sensorValue){ // Red base
     float red = putInRange(sensorValue, 980, 1023);
     float blue = 255 - red;
     red *= percent;
     blue *= percent;
-    setAllLights(strip.Color(red, 0, blue));
+    transitionAllLights(strip.Color(red, 0, blue), currentColor, jump);
   }
 }
 
@@ -417,21 +430,24 @@ void goingDOWN() {
 
 void maxOutTraining(){
   sensorValue = getSensorValue(SENSOR_1, 100);
+  int jump = 15; //Smaller = faster transistions
+  uint32_t currentColor = strip.getPixelColor(129);
   if(sensorValue <= 800){
     float green = putInRange(sensorValue, 0, 800);
-    setAllLights(strip.Color(0, green, 0)); // Green
+    transitionAllLights(strip.Color(0, green, 0), currentColor, jump);
   }else if(800 < sensorValue && sensorValue <= 980){
     float blue = putInRange(sensorValue, 800, 980);
     float green = 255 - blue;
-    setAllLights(strip.Color(0, green, blue)); // Blue
+    transitionAllLights(strip.Color(0, green, blue), currentColor, jump);
   }else if(980 < sensorValue){
     float red = putInRange(sensorValue, 980, 1023);
     float blue = 255 - red;
-    setAllLights(strip.Color(red, 0, blue)); // Red
+    transitionAllLights(strip.Color(red, 0, blue), currentColor, jump);
   }
-  
-  if(users[currentUser]->getHighPressure() < (sensorValue/1023.0 * 22.0)){
-      users[currentUser]->setHighPressure((sensorValue/1023.0 * 22.0));
+
+  float calibrateVal = -12.0;
+  if(users[currentUser]->getHighPressure() < (sensorValue/1023.0 * 22.0 + calibrateVal)){
+      users[currentUser]->setHighPressure((sensorValue/1023.0 * 22.0 + calibrateVal));
   }
 }
 
@@ -511,6 +527,105 @@ void rippleEffect() {
       break;
     }
   }
+}
+
+
+//when a color is squeezed, pick a random pixel and direction (back if within 10 or so of the end)
+//those pixels are then in an array with 5 second timers set on all of them
+//those timers decrease at the same rate
+//if a pixel gets drawn on it again, its timer goes back to 5 seconds
+//mix colors if anything overlaps, otherwise its straight red/blue/green all at 255
+
+int pixelTimers[130] = { 0 };
+int fullTime = 255;
+int getNewColor = true;
+
+void colorMixPaint(){
+
+  bool redChosen = false;
+  bool greenChosen = false;
+  bool blueChosen = false;
+  
+  sensorValue = getSensorValue(SENSOR_1, 300);
+  sensorValue1 = getSensorValue(SENSOR_2, 100);
+  sensorValue2 = getSensorValue(SENSOR_3, 100);
+  Serial.println(sensorValue);
+  Serial.println(sensorValue2);
+
+  if(sensorValue > 0){
+    redChosen = true;
+  }else if(sensorValue1 > 0){
+    greenChosen = true;
+  }else if(sensorValue2 > 0){
+    blueChosen = true;
+  }
+
+  if(redChosen){
+    colorMixDrawer(strip.Color(255, 0, 0)); // Red
+    Serial.println("Red...");
+  }else if(greenChosen){
+    colorMixDrawer(strip.Color(0, 255, 0)); // Green
+    Serial.println("Green...");
+  }else if(blueChosen){
+    colorMixDrawer(strip.Color(0, 0, 255)); // Blue
+    Serial.println("Blue...");
+  }else{
+    Serial.println("No color Drawn");
+  }
+
+  colorMixFader();
+}
+
+void colorMixDrawer(uint32_t lineColor){
+  int pixel = random(0, strip.numPixels()); //0 up to 129
+  int orientation = rand() % 2; // 0: 129->0 or 1: 0->129;
+  
+  if (pixel < 26){ orientation = 1; }
+  if (pixel > 104){ orientation = 0; }
+  
+  int targetPixel;
+  
+  if(orientation == 1){ 
+    targetPixel = random(pixel + 10, strip.numPixels());
+  }
+  if(orientation == 0){
+    targetPixel = random(0, pixel - 10);
+  }
+
+  //  mix existing colors:
+  //  get existing color of that pixel, separate out those colors, add in new color, set pixel color
+  if(orientation == 1){
+    for(int i = pixel; i < targetPixel; i++){
+      strip.setPixelColor(i, lineColor);
+      pixelTimers[i] = fullTime;
+      strip.show();
+      delay(10);
+    }
+  }else{
+    for(int i = pixel; i > targetPixel; i--){
+      strip.setPixelColor(i, lineColor);
+      pixelTimers[i] = fullTime;
+      strip.show();
+      delay(10);
+    }
+  }
+}
+
+void colorMixFader(){
+  for(int i = 0; i < strip.numPixels(); i++){
+    pixelTimers[i]--;
+    if(pixelTimers[i] <= 0){
+      pixelTimers[i] = 0;
+    }
+    if(splitColor(strip.getPixelColor(i), 'r') > 0){
+      strip.setPixelColor(i, strip.Color(pixelTimers[i], 0, 0));
+    }else if(splitColor(strip.getPixelColor(i), 'g') > 0){
+      strip.setPixelColor(i, strip.Color(0, pixelTimers[i], 0));
+    }else if(splitColor(strip.getPixelColor(i), 'b') > 0){
+      strip.setPixelColor(i, strip.Color(0, 0, pixelTimers[i]));
+    }
+  }
+  strip.show();
 }
 
 // higher pressure --> lower delay
@@ -600,12 +715,98 @@ float putInRange(float value, float oldMin, float oldMax){
   return (((value - oldMin) * newRange) / oldRange);
 }
 
-// Sets all lights on the strip to color c.
+// Sets all lights on the strip to color c,
+// Then shows the strip
 void setAllLights(uint32_t c) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
   }
   strip.show();
+}
+
+//Transitions to new color newColor at speed jumpVal 
+//  jumpVal = how many color values to move through on its way
+//  Take in new color, jump value (lower = Faster transition)
+void transitionAllLights(uint32_t newColor, uint32_t currentColor, int jumpVal) {
+  int newRed = splitColor(newColor, 'r');
+  int newBlue = splitColor(newColor, 'b');
+  int newGreen = splitColor(newColor, 'g');
+  Serial.println("Goal r:" + (String)newRed + " g:" + (String)newGreen + " b:" + (String)newBlue);
+  
+  int currRed = splitColor(currentColor, 'r');
+  int currBlue = splitColor(currentColor, 'b');
+  int currGreen = splitColor(currentColor, 'g');
+
+  int redDiff = abs(currRed - newRed);
+  int blueDiff = abs(currBlue - newBlue);
+  int greenDiff = abs(currGreen - newGreen);
+
+  int redJump = ((redDiff / jumpVal) == 0) ? 1 : (redDiff / jumpVal);
+  int blueJump = ((blueDiff / jumpVal) == 0) ? 1 : (blueDiff / jumpVal);
+  int greenJump = ((greenDiff / jumpVal) == 0) ? 1 : (greenDiff / jumpVal);
+
+  bool one = false;
+  bool two = false;
+  bool three = false;
+  while(1){
+    if(currRed < newRed){
+      currRed += redJump;
+      if(currRed > newRed){
+        currRed = newRed;
+      }
+    }else if(currRed > newRed){
+      currRed -= redJump;
+      if(currRed < newRed){
+        currRed = newRed;
+      }
+    }else{
+      one = true;
+    }
+    
+    if(currBlue < newBlue){
+      currBlue += blueJump;
+      if(currBlue > newBlue){
+        currBlue = newBlue;
+      }
+    }else if(currBlue > newBlue){
+      currBlue -= blueJump;
+      if(currBlue < newBlue){
+        currBlue = newBlue;
+      }
+    }else{
+      two = true;
+    }
+    
+    if(currGreen < newGreen){
+      currGreen += greenJump;
+      if(currGreen > newGreen){
+        currGreen = newGreen;
+      }
+    }else if (currGreen > newGreen){
+      currGreen -= greenJump;
+      if(currGreen < newGreen){
+        currGreen = newGreen;
+      }
+    }else{
+      three = true;
+    }
+
+    if(one && two && three){
+      break;
+    }
+    setAllLights(strip.Color(currRed, currGreen, currBlue));
+    Serial.println("Current r:" + (String)currRed + " g:" + (String)currGreen + " b:" + (String)currBlue);
+  }
+}
+
+//splits color into r g or b value
+uint8_t splitColor ( uint32_t c, char value ){
+  switch ( value ) {
+    case 'r': return (uint8_t)(c >> 16);
+    case 'g': return (uint8_t)(c >>  8);
+    case 'b': return (uint8_t)(c >>  0);
+    default:  return 0;
+  }
 }
 
 String make16Chars(String input){
