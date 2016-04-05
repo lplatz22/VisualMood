@@ -26,12 +26,6 @@ int sensorValue = 0; // Weak Sensor
 int sensorValue1 = 0; // Strong Sensor
 int sensorValue2 = 0; // Weak Sensor
 
-// start with increasing intensity in the color
-// once breatheTimer reaches 425, we start to decrease color intensity
-int breatheTimer = 0;
-float breatheMax = 425.0;
-bool increaseIntensity = true;
-
 const int modeButtonPin = 7; // button to switch modes
 int modeButtonState = 0;     // variable for reading the pushbutton status
 bool modeButtonPushed = false;
@@ -94,8 +88,7 @@ namespace smoothOP
 
 enum LightMode {
   off, 
-  simple, 
-  breathe,
+  simple,
   smoothMove,
   maxOut,
   pressure2x,
@@ -113,7 +106,6 @@ int getSensorValue(uint8_t pin, int minValue);
 int getSensorValue(uint8_t pin);
 int getColorFromPressure(int sensorValue, int currentColor);
 uint32_t Wheel(byte WheelPos);
-uint32_t WheelWithBreathe(byte WheelPos, float percent);
 uint32_t toRGB(uint32_t inVal);
 float putInRange(float value, float oldMin, float oldMax);
 void setAllLights(uint32_t c);
@@ -124,7 +116,6 @@ String make16Chars(String input);
 // soothing.ino functions
 void doublePressure();
 void colorWithPressure();
-void breatheEffectLoop();
 void rainbowWithPressure();
 void rainbowCycle();
 void rippleEffect();
@@ -192,8 +183,6 @@ void loop() {
     if(currentMode == off){
       currentMode = simple;
     }else if(currentMode == simple){
-      currentMode = breathe;
-    }else if (currentMode == breathe){
       currentMode = smoothMove;
     }else if (currentMode == smoothMove) {
       currentMode = maxOut;
@@ -225,10 +214,6 @@ void loop() {
     case (simple):
       lcd.print(make16Chars("Simple"));
       colorWithPressure();
-      break;
-    case (breathe):
-      lcd.print(make16Chars("Breathe"));
-      breatheEffectLoop();
       break;
     case (smoothMove):
       lcd.print(make16Chars("Training: " + users[currentUser]->getName()));

@@ -34,41 +34,6 @@ void colorWithPressure(){
   }
 }
 
-//breathe effect, with smooth transitions with pressure
-void breatheEffectLoop() {
-  sensorValue = getSensorValue(SENSOR_1, 100);
-  if (increaseIntensity) {
-    breatheTimer++;
-  }else {
-    breatheTimer--;
-  }
-  if (breatheTimer == breatheMax) { // start decreasing intensity of lights from here on out
-    increaseIntensity = false;
-  }else if (breatheTimer == 0) { // start increasing intensity of lights from here on out
-    increaseIntensity = true;
-  }
-  float percent = (breatheTimer / breatheMax); // percentage of breatheTimer gone through
-  uint32_t currentColor = strip.getPixelColor(129);
-  int jump = 15; //Smaller = faster transistions
-  if(sensorValue < 800){ // Green Base
-    float green = putInRange(sensorValue, 0, 800);
-    green *= percent;
-    transitionAllLights(strip.Color(0, green, 0), currentColor, jump);
-  }else if(800 <= sensorValue && sensorValue < 980){ // Blue Base
-    float blue = putInRange(sensorValue, 800, 980);
-    float green = 255 - blue;
-    blue *= percent;
-    green *= percent;
-    transitionAllLights(strip.Color(0, green, blue), currentColor, jump);
-  }else if(980 <= sensorValue){ // Red base
-    float red = putInRange(sensorValue, 980, 1023);
-    float blue = 255 - red;
-    red *= percent;
-    blue *= percent;
-    transitionAllLights(strip.Color(red, 0, blue), currentColor, jump);
-  }
-}
-
 //runs continuous rainbow effect, speeding up with higher pressure
 void rainbowWithPressure() {
   uint16_t i, j;

@@ -56,18 +56,6 @@ uint32_t Wheel(byte WheelPos) {
   }
 }
 
-uint32_t WheelWithBreathe(byte WheelPos, float percent) {
-  if(WheelPos < 85) {
-   return strip.Color(WheelPos * 3 * percent, (255 - WheelPos * 3) * percent, 0);
-  } else if(WheelPos < 170) {
-   WheelPos -= 85;
-   return strip.Color((255 - WheelPos * 3) * percent, 0, WheelPos * 3 * percent);
-  } else {
-   WheelPos -= 170;
-   return strip.Color(0, WheelPos * 3 * percent, (255 - WheelPos * 3) * percent);
-  }
-}
-
 uint32_t toRGB(uint32_t inVal) {
   if (inVal > 255) {
     inVal | 255;
