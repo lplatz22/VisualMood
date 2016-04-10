@@ -6,9 +6,20 @@ int getSensorValue(uint8_t pin, int minValue){
     return sensorVal;
   }
 }
-
 int getSensorValue(uint8_t pin){
   return analogRead(pin);
+}
+int getSensorValue_All(int minValue){
+  int sensorVal = analogRead(SENSOR_1);
+  int sensorVal2 = analogRead(SENSOR_2);
+  int sensorVal3 = analogRead(SENSOR_3);
+  int max1 = max(sensorVal, sensorVal2);
+  int finalMax = max(max1, sensorVal3);
+  if (finalMax < minValue){
+    return 0.0;
+  }else{
+    return finalMax;
+  }
 }
 
 // higher pressure --> lower delay

@@ -62,7 +62,7 @@ uint32_t decreaseColor()
 }
 
 void maxOutTraining(){
-  sensorValue = getSensorValue(SENSOR_1, 100);
+  sensorValue = getSensorValue_All(100);
   float meterHeight = putInRange(sensorValue, 100, currentDiff.getHighLevel(), 0, 130);
 
   for (int i = 0; i < meterHeight; i++){
