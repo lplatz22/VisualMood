@@ -3,9 +3,9 @@ void doublePressure(){
   sensorValue1 = getSensorValue(SENSOR_2, 100);
   sensorValue2 = getSensorValue(SENSOR_3, 100);
 
-  float red = putInRange(sensorValue, 100, 1023);
-  float green = putInRange(sensorValue1, 100, 1023);
-  float blue = putInRange(sensorValue2, 100, 1023);
+  float red = putInRange(sensorValue, 100, currentDiff.getHighLevel());
+  float green = putInRange(sensorValue1, 100, currentDiff.getHighLevel());
+  float blue = putInRange(sensorValue2, 100, currentDiff.getHighLevel());
   
   int jump = 15;
   uint32_t currentColor = strip.getPixelColor(129);
@@ -17,15 +17,15 @@ void colorWithPressure(){
   sensorValue = getSensorValue(SENSOR_1, 400);
   uint32_t currentColor = strip.getPixelColor(129);
   int jump = 15; //Smaller = faster transistions
-  if(sensorValue > 850 && sensorValue <= 945){
-    float green = putInRange(sensorValue, 850, 945);
+  if(sensorValue > currentDiff.getLowLevel() && sensorValue <= currentDiff.getMediumLevel()){
+    float green = putInRange(sensorValue, currentDiff.getLowLevel(), currentDiff.getMediumLevel());
     transitionAllLights(strip.Color(0, green, 0), currentColor, jump);
-  }else if(945 < sensorValue && sensorValue <= 995){
-    float blue = putInRange(sensorValue, 945, 995);
+  }else if(currentDiff.getMediumLevel() < sensorValue && sensorValue <= currentDiff.getHighLevel()){
+    float blue = putInRange(sensorValue, currentDiff.getMediumLevel(), currentDiff.getHighLevel());
     float green = 255 - blue;
     transitionAllLights(strip.Color(0, green, blue), currentColor, jump);
-  }else if(995 < sensorValue){
-    float red = putInRange(sensorValue, 995, 1020);
+  }else if(currentDiff.getHighLevel() < sensorValue){
+    float red = putInRange(sensorValue, currentDiff.getHighLevel(), 1023);
     float blue = 255 - red;
     transitionAllLights(strip.Color(red, 0, blue), currentColor, jump);
   }
@@ -42,16 +42,15 @@ void rainbowWithPressure() {
       strip.setPixelColor(i, Wheel((i+j) & 255));
     }
     strip.show();
-    sensorValue = getSensorValue(SENSOR_1);
+    sensorValue = getSensorValue(SENSOR_1, 100);
     uint8_t wait = getDelayFromPressure(sensorValue);
 
     optionButtonState = digitalRead(optionButtonPin);
     if (!optionButtonPushed && optionButtonState == HIGH) {
       optionButtonPushed = true;
-      Serial.println(rainbowStyle);
-      rainbowStyle = 1;
-      lcd.print(make16Chars("Rainbow - Cycle"));
-      break;
+      currentDiff.cycleDiff();
+      lcd.setCursor(0, 1);
+      lcd.print(make16Chars("Diff: " + currentDiff.getDifficulty()));
     } else if (optionButtonState == LOW){
       optionButtonPushed = false;
     } 
@@ -78,15 +77,15 @@ void rainbowCycle() {
       strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
     }
     strip.show();
-    sensorValue = getSensorValue(SENSOR_1);
+    sensorValue = getSensorValue(SENSOR_1, 100);
     uint8_t wait = getDelayFromPressure(sensorValue);
 
     optionButtonState = digitalRead(optionButtonPin);
     if (!optionButtonPushed && optionButtonState == HIGH) {
       optionButtonPushed = true;
-      Serial.println(rainbowStyle);
-      rainbowStyle = 0;
-      break;
+      currentDiff.cycleDiff();
+      lcd.setCursor(0, 1);
+      lcd.print(make16Chars("Diff: " + currentDiff.getDifficulty()));
     } else if (optionButtonState == LOW){
       optionButtonPushed = false;
     } 
@@ -120,7 +119,7 @@ void rippleEffect() {
     for(int curPixel=0; curPixel<numPixels; curPixel++) {
       
       // get delay and color from pressure reading
-      sensorValue = getSensorValue(SENSOR_1);
+      sensorValue = getSensorValue(SENSOR_1, 100);
       int wait = getDelayFromPressure(sensorValue);
       for (int i = 0; i <= curPixel; i++) {
         strip.setPixelColor(curPixel, Wheel(color));
@@ -176,11 +175,11 @@ void colorMixWave(){
   uint8_t blue = 0;
   uint8_t green = 0;
   if(sensorValue > 0){
-    red = putInRange(sensorValue, 100, 1023);
+    red = putInRange(sensorValue, 100, currentDiff.getHighLevel());
   }if(sensorValue1 > 0){
-    green = putInRange(sensorValue1, 100, 1023);
+    green = putInRange(sensorValue1, 100, currentDiff.getHighLevel());
   }if(sensorValue2 > 0){
-    blue = putInRange(sensorValue2, 100, 1023);
+    blue = putInRange(sensorValue2, 100, currentDiff.getHighLevel());
   }
   strip.setPixelColor(0, strip.Color(red, green, blue));
   strip.show();

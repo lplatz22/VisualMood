@@ -14,13 +14,13 @@ int getSensorValue(uint8_t pin){
 // higher pressure --> lower delay
 int getDelayFromPressure(int sensorValue) {
   int wait;
-  if (sensorValue <= 800){
+  if (sensorValue <= currentDiff.getLowLevel()){
       wait = 80;
-   }else if (800 < sensorValue && sensorValue <= 890){
+   }else if (currentDiff.getLowLevel() < sensorValue && sensorValue <= currentDiff.getMediumLevel()){
       wait = 40;
-   }else if (890 < sensorValue && sensorValue <= 980){
+   }else if (currentDiff.getMediumLevel() < sensorValue && sensorValue <= currentDiff.getHighLevel()){
       wait = 20;
-   }else if (980 < sensorValue) {
+   }else if (currentDiff.getHighLevel() < sensorValue) {
       wait = 5;
    }
    return wait;
@@ -29,13 +29,13 @@ int getDelayFromPressure(int sensorValue) {
 // higher pressure --> ligther color
 int getColorFromPressure(int sensorValue, int currentColor) {
   int nextColor = currentColor;
-  if(sensorValue <= 800){
+  if(sensorValue <= currentDiff.getLowLevel()){
     nextColor += 1;
-  }else if(800 < sensorValue && sensorValue <= 890){
+  }else if(currentDiff.getLowLevel() < sensorValue && sensorValue <= currentDiff.getMediumLevel()){
     nextColor += 3;
-  }else if(890 < sensorValue && sensorValue <= 980){
+  }else if(currentDiff.getMediumLevel() < sensorValue && sensorValue <= currentDiff.getHighLevel()){
     nextColor += 5;
-  }else if(980 < sensorValue){
+  }else if(currentDiff.getHighLevel() < sensorValue){
     nextColor += 7;
   }
   return nextColor;

@@ -40,43 +40,77 @@ int rainbowStyle = 0;
 // for the LED screen
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
-class User{
-private:
-  String name;
-  float highPressure;
-  int highDuration;
-  
-public:
-  User(String incomingName){
-    name = incomingName;
-    highPressure = 0;
-    highDuration = 0;
-  }
-  float getHighPressure(){
-    return highPressure;
-  }
-  int getHighDuration(){
-    return highDuration;
-  }
-  String getName(){
-    return name;
-  }
-
-  void setHighTime(int seconds){
-    highDuration = seconds;
-  }
-  void setHighPressure(float highPressureIn){
-    highPressure = highPressureIn;
-  }
-  void setName(String NameIn){
-    name = NameIn;
-  }
+enum DifficultyLevel{
+  Low,
+  Medium,
+  High
 };
 
-int currentUser = 0;
-const int MAXUSERS = 100;
-User* users[MAXUSERS];
-int totalUsers = 0;
+class Difficulty{
+private:
+  DifficultyLevel currentDiff;
+  float high_High = 1020;
+  float high_Med = 980;
+  float high_Low = 750;
+  
+  float med_High = 980;
+  float med_Med = 800;
+  float med_Low = 650;
+
+  float low_High = 900;
+  float low_Med = 725;
+  float low_Low = 600;
+  
+public:
+  Difficulty(){
+    currentDiff = Low;
+  } 
+  void cycleDiff(){
+    if(currentDiff == Low){
+      currentDiff = Medium;
+    }else if(currentDiff == Medium){
+      currentDiff = High;
+    }else if(currentDiff == High){
+      currentDiff = Low;
+    }
+  }
+  String getDifficulty(){
+    if(currentDiff == Low){
+      return "Low";
+    }else if(currentDiff == Medium){
+      return "Medium";
+    }else if(currentDiff == High){
+      return "High";
+    }
+  }
+  float getHighLevel(){
+    if(currentDiff == Low){
+      return low_High;
+    }else if(currentDiff == Medium){
+      return med_High;
+    }else if(currentDiff == High){
+      return high_High;
+    }
+  }
+  float getMediumLevel(){
+    if(currentDiff == Low){
+      return low_Med;
+    }else if(currentDiff == Medium){
+      return med_Med;
+    }else if(currentDiff == High){
+      return high_Med;
+    }
+  }
+  float getLowLevel(){
+    if(currentDiff == Low){
+      return low_Low;
+    }else if(currentDiff == Medium){
+      return med_Low;
+    }else if(currentDiff == High){
+      return high_Low;
+    }
+  }
+};
 
 namespace smoothOP
 { 
@@ -85,6 +119,7 @@ namespace smoothOP
   int blue = 0;
   int green = 0;
 }
+
 
 enum LightMode {
   off, 
@@ -98,6 +133,7 @@ enum LightMode {
   rainbow
 }; 
 
+Difficulty currentDiff;
 LightMode currentMode;
 
 // declaration of functions and classes from other project files, code not able to compile otherwise
@@ -141,37 +177,17 @@ void setup() {
   currentMode = off;
   Serial.println(currentMode);
   lcd.begin(16, 2); // set up the LCD's number of columns and rows:
-  lcd.setCursor(0, 0); //column 0, row 0
-  lcd.print(make16Chars("Visual Mood!")); // Print a message to the LCD.
-
-  //Set Up Users
-  User* luke = new User("Luke");
-  User* victor = new User("Victor");
-  User* rohan = new User("Rohan");
-  User* sam = new User("Sam");
-  //Add users to users[]
-  users[0] = luke;
-  totalUsers++;
-  users[1] = victor;
-  totalUsers++;
-  users[2] = rohan;
-  totalUsers++;
-  users[3] = sam;
-  totalUsers++;
+  lcd.setCursor(0, 1);
+  lcd.print(make16Chars("Diff: " + currentDiff.getDifficulty()));
 }
 
 void loop() {
   optionButtonState = digitalRead(optionButtonPin);
   if (!optionButtonPushed && optionButtonState == HIGH) {
     optionButtonPushed = true;
-    if (currentMode == smoothMove || currentMode == maxOut){
-      currentUser++;
-      currentUser = currentUser % totalUsers;
-    }else if (currentMode == rainbow){
-      Serial.println(rainbowStyle);
-      rainbowStyle++;
-      rainbowStyle = rainbowStyle % 1;
-    }
+    currentDiff.cycleDiff();
+    lcd.setCursor(0, 1);
+    lcd.print(make16Chars("Diff: " + currentDiff.getDifficulty()));
   } else if (optionButtonState == LOW){
     optionButtonPushed = false;
   } 
@@ -205,7 +221,7 @@ void loop() {
 
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
-  lcd.setCursor(0, 1);
+  lcd.setCursor(0, 0);
   switch (currentMode){
     case (off):
       lcd.print(make16Chars("LED OFF"));
@@ -216,23 +232,14 @@ void loop() {
       colorWithPressure();
       break;
     case (smoothMove):
-      lcd.print(make16Chars("Training: " + users[currentUser]->getName()));
-      lcd.setCursor(0, 0);
-      lcd.print(make16Chars("High Score: " + (String)users[currentUser]->getHighPressure()));
-      lcd.setCursor(0, 1);
+      lcd.print(make16Chars("Training"));
       smoothOperator();
       break;
     case (maxOut):
-      lcd.print(make16Chars("Max Out: " + users[currentUser]->getName()));
-      lcd.setCursor(0, 0);
-      lcd.print(make16Chars("High Score: " + (String)users[currentUser]->getHighPressure()));
-      lcd.setCursor(0, 1);
+      lcd.print(make16Chars("Max Out"));
       maxOutTraining();
       break;
     case (pressure2x):
-      lcd.setCursor(0, 0);
-      lcd.print(make16Chars("Visual Mood!"));
-      lcd.setCursor(0, 1);
       lcd.print(make16Chars("Color Mixing"));
       doublePressure();
       break;

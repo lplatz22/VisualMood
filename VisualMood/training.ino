@@ -63,7 +63,7 @@ uint32_t decreaseColor()
 
 void maxOutTraining(){
   sensorValue = getSensorValue(SENSOR_1, 100);
-  float meterHeight = putInRange(sensorValue, 100, 1023, 0, 130);
+  float meterHeight = putInRange(sensorValue, 100, currentDiff.getHighLevel(), 0, 130);
 
   for (int i = 0; i < meterHeight; i++){
     if(i <= 20){
@@ -78,10 +78,5 @@ void maxOutTraining(){
   for (int i = strip.numPixels() - 1; i >= meterHeight; i--){
     strip.setPixelColor(i, strip.Color(0,0,0));
     strip.show();
-  }
-
-  float calibrateVal = -12.0;
-  if(users[currentUser]->getHighPressure() < (sensorValue/1023.0 * 22.0 + calibrateVal)){
-      users[currentUser]->setHighPressure((sensorValue/1023.0 * 22.0 + calibrateVal));
   }
 }
