@@ -59,7 +59,7 @@ void rainbowWithPressure() {
     modeButtonState = digitalRead(modeButtonPin);
     if (!modeButtonPushed && modeButtonState == HIGH) {
       modeButtonPushed = true;
-      currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
+      rainbowStyle = 1;
       Serial.println("Pressed!");
       Serial.println(currentMode);
       break;
@@ -94,6 +94,7 @@ void rainbowCycle() {
     modeButtonState = digitalRead(modeButtonPin);
     if (!modeButtonPushed && modeButtonState == HIGH) {
       modeButtonPushed = true;
+      rainbowStyle = 0;
       currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
       Serial.println("Pressed!");
       Serial.println(currentMode);
@@ -136,8 +137,17 @@ void rippleEffect() {
         }
       }
 
+      optionButtonState = digitalRead(optionButtonPin);
+      if (!optionButtonPushed && optionButtonState == HIGH) {
+        optionButtonPushed = true;
+        currentDiff.cycleDiff();
+        lcd.setCursor(0, 1);
+        lcd.print(make16Chars("Diff: " + currentDiff.getDifficulty()));
+      } else if (optionButtonState == LOW){
+        optionButtonPushed = false;
+      } 
+
       modeButtonState = digitalRead(modeButtonPin);
-    
       if (!modeButtonPushed && modeButtonState == HIGH) {
         modeButtonPushed = true;
         currentMode = rainbow;

@@ -64,19 +64,60 @@ uint32_t decreaseColor()
 void maxOutTraining(){
   sensorValue = getSensorValue_All(100);
   float meterHeight = putInRange(sensorValue, 100, currentDiff.getHighLevel(), 0, 130);
-
   for (int i = 0; i < meterHeight; i++){
-    if(i <= 20){
+    if(i <= 40){
       strip.setPixelColor(i, strip.Color(0,255,0));
-    }else if (i > 20 && i <= 80){
+    }else if (i > 40 && i <= 100){
       strip.setPixelColor(i, strip.Color(255,255,0));
-    }else if (i > 80){
+    }else if (i > 100){
       strip.setPixelColor(i, strip.Color(255,0,0));
     }
     strip.show();
+
+    optionButtonState = digitalRead(optionButtonPin);
+    if (!optionButtonPushed && optionButtonState == HIGH) {
+      optionButtonPushed = true;
+      currentDiff.cycleDiff();
+      lcd.setCursor(0, 1);
+      lcd.print(make16Chars("Diff: " + currentDiff.getDifficulty()));
+    } else if (optionButtonState == LOW){
+      optionButtonPushed = false;
+    } 
+
+    modeButtonState = digitalRead(modeButtonPin);
+    if (!modeButtonPushed && modeButtonState == HIGH) {
+      modeButtonPushed = true;
+      currentMode = pressure2x;
+      Serial.println("Pressed!");
+      Serial.println(currentMode);
+      break;
+    } else if (modeButtonState == LOW) {
+      modeButtonPushed = false;
+    }
   }
   for (int i = strip.numPixels() - 1; i >= meterHeight; i--){
     strip.setPixelColor(i, strip.Color(0,0,0));
     strip.show();
+
+    optionButtonState = digitalRead(optionButtonPin);
+    if (!optionButtonPushed && optionButtonState == HIGH) {
+      optionButtonPushed = true;
+      currentDiff.cycleDiff();
+      lcd.setCursor(0, 1);
+      lcd.print(make16Chars("Diff: " + currentDiff.getDifficulty()));
+    } else if (optionButtonState == LOW){
+      optionButtonPushed = false;
+    } 
+
+    modeButtonState = digitalRead(modeButtonPin);
+    if (!modeButtonPushed && modeButtonState == HIGH) {
+      modeButtonPushed = true;
+      currentMode = pressure2x;
+      Serial.println("Pressed!");
+      Serial.println(currentMode);
+      break;
+    } else if (modeButtonState == LOW) {
+      modeButtonPushed = false;
+    }
   }
 }
