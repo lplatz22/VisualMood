@@ -14,7 +14,8 @@ void doublePressure(){
 
 // Moves between colors by mixing them as pressure changes 
 void colorWithPressure(){
-  sensorValue = getSensorValue(SENSOR_1, 400);
+  sensorValue = getSensorValue_All(100);
+  
   uint32_t currentColor = strip.getPixelColor(129);
   int jump = 15; //Smaller = faster transistions
   if(sensorValue > currentDiff.getLowLevel() && sensorValue <= currentDiff.getMediumLevel()){
@@ -42,7 +43,7 @@ void rainbowWithPressure() {
       strip.setPixelColor(i, Wheel((i+j) & 255));
     }
     strip.show();
-    sensorValue = getSensorValue(SENSOR_1, 100);
+    sensorValue = getSensorValue_All(100);
     uint8_t wait = getDelayFromPressure(sensorValue);
 
     optionButtonState = digitalRead(optionButtonPin);
@@ -58,7 +59,7 @@ void rainbowWithPressure() {
     modeButtonState = digitalRead(modeButtonPin);
     if (!modeButtonPushed && modeButtonState == HIGH) {
       modeButtonPushed = true;
-      currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
+      rainbowStyle = 1;
       Serial.println("Pressed!");
       Serial.println(currentMode);
       break;
@@ -77,7 +78,7 @@ void rainbowCycle() {
       strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
     }
     strip.show();
-    sensorValue = getSensorValue(SENSOR_1, 100);
+    sensorValue = getSensorValue_All(100);
     uint8_t wait = getDelayFromPressure(sensorValue);
 
     optionButtonState = digitalRead(optionButtonPin);
@@ -93,6 +94,7 @@ void rainbowCycle() {
     modeButtonState = digitalRead(modeButtonPin);
     if (!modeButtonPushed && modeButtonState == HIGH) {
       modeButtonPushed = true;
+      rainbowStyle = 0;
       currentMode = off; // BUG: Workaround, will work as long as simple is first, last is rainbow
       Serial.println("Pressed!");
       Serial.println(currentMode);
@@ -119,7 +121,7 @@ void rippleEffect() {
     for(int curPixel=0; curPixel<numPixels; curPixel++) {
       
       // get delay and color from pressure reading
-      sensorValue = getSensorValue(SENSOR_1, 100);
+      sensorValue = getSensorValue_All(100);
       int wait = getDelayFromPressure(sensorValue);
       for (int i = 0; i <= curPixel; i++) {
         strip.setPixelColor(curPixel, Wheel(color));
@@ -135,8 +137,17 @@ void rippleEffect() {
         }
       }
 
+      optionButtonState = digitalRead(optionButtonPin);
+      if (!optionButtonPushed && optionButtonState == HIGH) {
+        optionButtonPushed = true;
+        currentDiff.cycleDiff();
+        lcd.setCursor(0, 1);
+        lcd.print(make16Chars("Diff: " + currentDiff.getDifficulty()));
+      } else if (optionButtonState == LOW){
+        optionButtonPushed = false;
+      } 
+
       modeButtonState = digitalRead(modeButtonPin);
-    
       if (!modeButtonPushed && modeButtonState == HIGH) {
         modeButtonPushed = true;
         currentMode = rainbow;
