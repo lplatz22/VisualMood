@@ -1,3 +1,6 @@
+#include <Time.h>
+#include <TimeLib.h>
+
 #include <Adafruit_NeoPixel.h>
 #include <LiquidCrystal.h>
 
@@ -114,6 +117,11 @@ public:
 
 namespace smoothOP
 { 
+  int curTime = 0;
+  int lastTime = second(now());
+  int lastMarker = second(now());
+  int speedInterval = 0; // seconds of time requirement for transition
+ 
   uint32_t curColor = 0;
   int red = 0;
   int blue = 0;

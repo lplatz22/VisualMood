@@ -1,65 +1,38 @@
 // Smooth Loop for pressure transitions:
 void smoothOperator() {
-  uint32_t curColor = strip.Color(smoothOP::red, smoothOP::green, smoothOP::blue);
-  uint32_t targetColor = getSensorValue(SENSOR_1) * MAX24 / MAXSensor;
-  if (smoothOP::red) {
-    curColor = curColor || 255 || (255 << 8);
+  uint32_t sensorValue = getSensorValue(SENSOR_1);
+  // This below is a timer that resets if below the lower level, and increases to 10 seconds. 
+  if (sensorValue < currentDiff.getLowLevel()) {
+    smoothOP::curTime = 0;
+  } else {
+    if (smoothOP::lastTime != smoothOP::lastMarker) {
+      if (smoothOP::curTime < 10) {
+        smoothOP::curTime++;
+      }
+      smoothOP::lastMarker = second(now());
+      smoothOP::lastTime = second(now());
+    } else {
+      smoothOP::lastTime = second(now());
+    }
   }
   
-  if (smoothOP::green) {
-    curColor = curColor || 255;
+  uint32_t curColor = strip.getPixelColor(129);
+  uint32_t targetColor = smoothOP::curTime * MAX24 / 10;
+
+  if (targetColor > (255 | (255 << 8))) {
+    targetColor = targetColor | 255 | (255 << 8);
   }
   
-  if (smoothOP::curColor < targetColor) {
-    goingUP();
-  } else {
-    goingDOWN();
-  } 
-}
-
-void goingUP() {
-//  Serial.println("GoingUP");
-  if(smoothOP::red < 255) {
-    setAllLights(increaseColor());
+  if (targetColor > 255) {
+    targetColor = targetColor | 255;
   }
-  return;
+  Serial.println("TargetColor: ");
+  Serial.println(targetColor);
+  transitionAllLights(targetColor, curColor, 15);
+  
 }
 
-void goingDOWN() {
-//  Serial.println("GoingDown");
-  if(smoothOP::blue || smoothOP::red || smoothOP::green) {
-    setAllLights(decreaseColor());
-  }
-  return;
-}
 
-uint32_t increaseColor()
-{
-   if (smoothOP::green == 255 || smoothOP::red > 0) {
-//     Serial.println("RED");
-     return strip.Color(++smoothOP::red, --smoothOP::green, smoothOP::blue);
-   } else if (smoothOP::blue == 255 || smoothOP::green > 0) {
-//     Serial.println("GREEN");
-     return strip.Color(smoothOP::red, ++smoothOP::green, --smoothOP::blue);
-   } else {
-//     Serial.println("BLUE");
-     return strip.Color(smoothOP::red, smoothOP::green, ++smoothOP::blue);
-   } 
-}
-
-uint32_t decreaseColor()
-{
-  if (smoothOP::red > 0) {
-//    Serial.println("RED");
-    return strip.Color(--smoothOP::red, ++smoothOP::green, smoothOP::blue);
-  } else if (smoothOP::green > 0) {
-//    Serial.println("GREEN");
-    return strip.Color(smoothOP::red, --smoothOP::green, ++smoothOP::blue);
-  } else {
-//    Serial.println("BLUE");
-    return strip.Color(smoothOP::red, smoothOP::green, --smoothOP::blue);
-  }
-}
 
 void maxOutTraining(){
   sensorValue = getSensorValue(SENSOR_1, 100);
