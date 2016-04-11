@@ -5,6 +5,8 @@
 #include <LiquidCrystal.h>
 
 #define PIN 6
+#define METER_PIN 13
+#define TRAINSENSOR A3
 
 #define SENSOR_1 A0 // Sensor_1 is used for all single controlled Modes
 #define SENSOR_2 A1
@@ -21,6 +23,8 @@ const double MAXSensor = 1023.0;
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(130, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel meter = Adafruit_NeoPixel(10, METER_PIN, NEO_GRB + NEO_KHZ800);
+
 
 //float voltage = 0.0;
 //Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
@@ -180,6 +184,8 @@ void setup() {
   Serial.begin(9600); //bits per second
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
+  meter.begin();
+  meter.show();
   pinMode(modeButtonPin, INPUT);
   pinMode(optionButtonPin, INPUT);
   currentMode = off;

@@ -1,8 +1,8 @@
 // Smooth Loop for pressure transitions:
 void smoothOperator() {
-  uint32_t sensorValue = getSensorValue(SENSOR_1);
+  uint32_t sensorValue = getSensorValue(TRAINSENSOR);
   // This below is a timer that resets if below the lower level, and increases to 10 seconds. 
-  if (sensorValue < currentDiff.getLowLevel()) {
+  if (sensorValue < currentDiff.getMediumLevel()) {
     smoothOP::curTime = 0;
   } else {
     if (smoothOP::lastTime != smoothOP::lastMarker) {
@@ -15,27 +15,42 @@ void smoothOperator() {
       smoothOP::lastTime = second(now());
     }
   }
+
+  
+  for(uint16_t i=0; i<10; i++) {
+      if (i == 9 && smoothOP::curTime == 10) {
+        meter.setPixelColor(i, meter.Color(0,255,0));
+      }
+      else if (i < smoothOP::curTime) {
+        meter.setPixelColor(i, meter.Color(0,0,255));
+      } else {
+        meter.setPixelColor(i, meter.Color(0,0,0));
+      }
+  }
+
+  meter.show();
   
   uint32_t curColor = strip.getPixelColor(129);
-  uint32_t targetColor = smoothOP::curTime * MAX24 / 10;
+  uint32_t targetColor;
+  if (smoothOP::curTime == 0) {
+    targetColor = meter.Color(0,0,0);
+  } else if (smoothOP::curTime < 4) {
+    targetColor = meter.Color(0,0,255);
+  } else  if (smoothOP::curTime < 7) {
+    targetColor = meter.Color(0,255,0);
+  } else {
+    targetColor = meter.Color(255,0,0);
+  }
 
-  if (targetColor > (255 | (255 << 8))) {
-    targetColor = targetColor | 255 | (255 << 8);
-  }
   
-  if (targetColor > 255) {
-    targetColor = targetColor | 255;
-  }
-  Serial.println("TargetColor: ");
-  Serial.println(targetColor);
-  transitionAllLights(targetColor, curColor, 15);
+  transitionAllLights(targetColor, curColor, 20);
   
 }
 
 
 
 void maxOutTraining(){
-  sensorValue = getSensorValue_All(100);
+  sensorValue = getSensorValue(TRAINSENSOR);
   float meterHeight = putInRange(sensorValue, 100, currentDiff.getHighLevel(), 0, 130);
   for (int i = 0; i < meterHeight; i++){
     if(i <= 40){
