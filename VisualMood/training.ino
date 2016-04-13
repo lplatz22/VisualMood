@@ -1,6 +1,6 @@
 // Smooth Loop for pressure transitions:
 void smoothOperator() {
-  uint32_t sensorValue = getSensorValue(TRAINSENSOR);
+  uint32_t sensorValue = getSensorValue(SENSOR_3);
   // This below is a timer that resets if below the lower level, and increases to 10 seconds. 
   if (sensorValue < currentDiff.getMediumLevel()) {
     smoothOP::curTime = 0;
@@ -50,7 +50,7 @@ void smoothOperator() {
 
 
 void maxOutTraining(){
-  sensorValue = getSensorValue(TRAINSENSOR);
+  sensorValue = getSensorValue(SENSOR_3);
   float meterHeight = putInRange(sensorValue, 100, currentDiff.getHighLevel(), 0, 130);
   for (int i = 0; i < meterHeight; i++){
     if(i <= 40){

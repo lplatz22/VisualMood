@@ -11,7 +11,8 @@ int getSensorValue(uint8_t pin){
 }
 int getSensorValue_All(int minValue){
   int sensorVal = analogRead(SENSOR_1);
-  int sensorVal2 = analogRead(SENSOR_2);
+  //int sensorVal2 = analogRead(SENSOR_2);
+  int sensorVal2 = 0;
   int sensorVal3 = analogRead(SENSOR_3);
   int max1 = max(sensorVal, sensorVal2);
   int finalMax = max(max1, sensorVal3);

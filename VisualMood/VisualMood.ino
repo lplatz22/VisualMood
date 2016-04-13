@@ -6,11 +6,11 @@
 
 #define PIN 6
 #define METER_PIN 13
-#define TRAINSENSOR A3
+//#define TRAINSENSOR A3
 
 #define SENSOR_1 A0 // Sensor_1 is used for all single controlled Modes
-#define SENSOR_2 A1
-#define SENSOR_3 A2
+// #define SENSOR_2 A1
+#define SENSOR_3 A2 // SENSOR_3/A2 will be TRAINSENSOR now!
 
 const uint32_t MAX32 = 4294967295;
 const uint32_t MAX24 = 16777216;

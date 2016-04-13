@@ -1,10 +1,11 @@
 void doublePressure(){
   sensorValue = getSensorValue(SENSOR_1, 100);
-  sensorValue1 = getSensorValue(SENSOR_2, 100);
+  //sensorValue1 = getSensorValue(SENSOR_2, 100);
   sensorValue2 = getSensorValue(SENSOR_3, 100);
 
   float red = putInRange(sensorValue, 100, currentDiff.getHighLevel());
-  float green = putInRange(sensorValue1, 100, currentDiff.getHighLevel());
+  // float green = putInRange(sensorValue1, 100, currentDiff.getHighLevel());
+  float green = 0;
   float blue = putInRange(sensorValue2, 100, currentDiff.getHighLevel());
   
   int jump = 15;
@@ -180,16 +181,18 @@ void colorMixWave(){
   }
 
   sensorValue = getSensorValue(SENSOR_1, 200);
-  sensorValue1 = getSensorValue(SENSOR_2, 100);
+  // sensorValue1 = getSensorValue(SENSOR_2, 100);
   sensorValue2 = getSensorValue(SENSOR_3, 100);
   uint8_t red = 0;
   uint8_t blue = 0;
   uint8_t green = 0;
   if(sensorValue > 0){
     red = putInRange(sensorValue, 100, currentDiff.getHighLevel());
-  }if(sensorValue1 > 0){
-    green = putInRange(sensorValue1, 100, currentDiff.getHighLevel());
-  }if(sensorValue2 > 0){
+  }
+  //if(sensorValue1 > 0){
+  //   green = putInRange(sensorValue1, 100, currentDiff.getHighLevel());
+  //}
+  if(sensorValue2 > 0){
     blue = putInRange(sensorValue2, 100, currentDiff.getHighLevel());
   }
   strip.setPixelColor(0, strip.Color(red, green, blue));
@@ -213,13 +216,13 @@ void colorMixPaint(){
   bool blueChosen = false;
   
   sensorValue = getSensorValue(SENSOR_1, 300);
-  sensorValue1 = getSensorValue(SENSOR_2, 100);
+  // sensorValue1 = getSensorValue(SENSOR_2, 100);
   sensorValue2 = getSensorValue(SENSOR_3, 100);
 
   if(sensorValue > 0){
     redChosen = true;
-  }else if(sensorValue1 > 0){
-    greenChosen = true;
+  //}else if(sensorValue1 > 0){
+  //  greenChosen = true;
   }else if(sensorValue2 > 0){
     blueChosen = true;
   }
@@ -227,9 +230,9 @@ void colorMixPaint(){
   if(redChosen){
     colorMixDrawer(strip.Color(255, 0, 0)); // Red
     Serial.println("Red...");
-  }else if(greenChosen){
-    colorMixDrawer(strip.Color(0, 255, 0)); // Green
-    Serial.println("Green...");
+  //}else if(greenChosen){
+  //  colorMixDrawer(strip.Color(0, 255, 0)); // Green
+  //  Serial.println("Green...");
   }else if(blueChosen){
     colorMixDrawer(strip.Color(0, 0, 255)); // Blue
     Serial.println("Blue...");
