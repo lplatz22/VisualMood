@@ -1,12 +1,14 @@
 void doublePressure(){
-  sensorValue = getSensorValue(SENSOR_1, 100);
+  sensorValue = getSensorValue(SENSOR_1, 200);
   //sensorValue1 = getSensorValue(SENSOR_2, 100);
   sensorValue2 = getSensorValue(SENSOR_3, 100);
 
-  float red = putInRange(sensorValue, 100, currentDiff.getHighLevel());
+  float red = putInRange(sensorValue, 200, currentDiff.getMediumHard());
+  Serial.println("Red " +(String)red);
   // float green = putInRange(sensorValue1, 100, currentDiff.getHighLevel());
   float green = 0;
-  float blue = putInRange(sensorValue2, 100, currentDiff.getHighLevel());
+  float blue = putInRange(sensorValue2, 100, currentDiff.getHighEasy());
+  Serial.println("blue " +(String)blue);
   
   int jump = 15;
   uint32_t currentColor = strip.getPixelColor(129);
@@ -19,15 +21,15 @@ void colorWithPressure(){
   
   uint32_t currentColor = strip.getPixelColor(129);
   int jump = 15; //Smaller = faster transistions
-  if(sensorValue > currentDiff.getLowLevel() && sensorValue <= currentDiff.getMediumLevel()){
-    float green = putInRange(sensorValue, currentDiff.getLowLevel(), currentDiff.getMediumLevel());
+  if(sensorValue > currentDiff.getLowEasy() && sensorValue <= currentDiff.getMediumEasy()){
+    float green = putInRange(sensorValue, currentDiff.getLowEasy(), currentDiff.getMediumEasy());
     transitionAllLights(strip.Color(0, green, 0), currentColor, jump);
-  }else if(currentDiff.getMediumLevel() < sensorValue && sensorValue <= currentDiff.getHighLevel()){
-    float blue = putInRange(sensorValue, currentDiff.getMediumLevel(), currentDiff.getHighLevel());
+  }else if(currentDiff.getMediumEasy() < sensorValue && sensorValue <= currentDiff.getHighEasy()){
+    float blue = putInRange(sensorValue, currentDiff.getMediumEasy(), currentDiff.getHighEasy());
     float green = 255 - blue;
     transitionAllLights(strip.Color(0, green, blue), currentColor, jump);
-  }else if(currentDiff.getHighLevel() < sensorValue){
-    float red = putInRange(sensorValue, currentDiff.getHighLevel(), 1023);
+  }else if(currentDiff.getHighEasy() < sensorValue){
+    float red = putInRange(sensorValue, currentDiff.getHighEasy(), 1023);
     float blue = 255 - red;
     transitionAllLights(strip.Color(red, 0, blue), currentColor, jump);
   }
@@ -187,13 +189,13 @@ void colorMixWave(){
   uint8_t blue = 0;
   uint8_t green = 0;
   if(sensorValue > 0){
-    red = putInRange(sensorValue, 100, currentDiff.getHighLevel());
+    red = putInRange(sensorValue, 100, currentDiff.getMediumHard());
   }
   //if(sensorValue1 > 0){
   //   green = putInRange(sensorValue1, 100, currentDiff.getHighLevel());
   //}
   if(sensorValue2 > 0){
-    blue = putInRange(sensorValue2, 100, currentDiff.getHighLevel());
+    blue = putInRange(sensorValue2, 100, currentDiff.getHighEasy());
   }
   strip.setPixelColor(0, strip.Color(red, green, blue));
   strip.show();
@@ -215,9 +217,9 @@ void colorMixPaint(){
   bool greenChosen = false;
   bool blueChosen = false;
   
-  sensorValue = getSensorValue(SENSOR_1, 300);
+  sensorValue = getSensorValue(SENSOR_1, 200);
   // sensorValue1 = getSensorValue(SENSOR_2, 100);
-  sensorValue2 = getSensorValue(SENSOR_3, 100);
+  sensorValue2 = getSensorValue(SENSOR_3, 300);
 
   if(sensorValue > 0){
     redChosen = true;

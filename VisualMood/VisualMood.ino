@@ -8,9 +8,9 @@
 #define METER_PIN 13
 //#define TRAINSENSOR A3
 
-#define SENSOR_1 A0 // Sensor_1 is used for all single controlled Modes
+#define SENSOR_1 A2 // Sensor_1 is used for all single controlled Modes
 // #define SENSOR_2 A1
-#define SENSOR_3 A2 // SENSOR_3/A2 will be TRAINSENSOR now!
+#define SENSOR_3 A0 // SENSOR_3/A2 will be TRAINSENSOR now!
 
 const uint32_t MAX32 = 4294967295;
 const uint32_t MAX24 = 16777216;
@@ -56,7 +56,7 @@ enum DifficultyLevel{
 class Difficulty{
 private:
   DifficultyLevel currentDiff;
-  float high_High = 1020;
+  float high_High = 1023;
   float high_Med = 980;
   float high_Low = 750;
   
@@ -67,6 +67,18 @@ private:
   float low_High = 900;
   float low_Med = 725;
   float low_Low = 600;
+
+  float high_High_Hard = 500;
+  float high_Med_Hard = 350;
+  float high_Low_Hard = 200;
+  
+  float med_High_Hard = 350;
+  float med_Med_Hard = 300;
+  float med_Low_Hard = 150;
+
+  float low_High_Hard = 150;
+  float low_Med_Hard = 100;
+  float low_Low_Hard = 75;
   
 public:
   Difficulty(){
@@ -90,7 +102,7 @@ public:
       return "High";
     }
   }
-  float getHighLevel(){
+  float getHighEasy(){
     if(currentDiff == Low){
       return low_High;
     }else if(currentDiff == Medium){
@@ -99,7 +111,7 @@ public:
       return high_High;
     }
   }
-  float getMediumLevel(){
+  float getMediumEasy(){
     if(currentDiff == Low){
       return low_Med;
     }else if(currentDiff == Medium){
@@ -108,13 +120,42 @@ public:
       return high_Med;
     }
   }
-  float getLowLevel(){
+  float getLowEasy(){
     if(currentDiff == Low){
       return low_Low;
     }else if(currentDiff == Medium){
       return med_Low;
     }else if(currentDiff == High){
       return high_Low;
+    }
+  }
+
+
+  float getHighHard(){
+    if(currentDiff == Low){
+      return low_High_Hard;
+    }else if(currentDiff == Medium){
+      return med_High_Hard;
+    }else if(currentDiff == High){
+      return high_High_Hard;
+    }
+  }
+  float getMediumHard(){
+    if(currentDiff == Low){
+      return low_Med_Hard;
+    }else if(currentDiff == Medium){
+      return med_Med_Hard;
+    }else if(currentDiff == High){
+      return high_Med_Hard;
+    }
+  }
+  float getLowHard(){
+    if(currentDiff == Low){
+      return low_Low_Hard;
+    }else if(currentDiff == Medium){
+      return med_Low_Hard;
+    }else if(currentDiff == High){
+      return high_Low_Hard;
     }
   }
 };

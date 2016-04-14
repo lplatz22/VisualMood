@@ -10,10 +10,11 @@ int getSensorValue(uint8_t pin){
   return analogRead(pin);
 }
 int getSensorValue_All(int minValue){
-  int sensorVal = analogRead(SENSOR_1);
+  int sensorVal = 0;
   //int sensorVal2 = analogRead(SENSOR_2);
   int sensorVal2 = 0;
   int sensorVal3 = analogRead(SENSOR_3);
+  
   int max1 = max(sensorVal, sensorVal2);
   int finalMax = max(max1, sensorVal3);
   if (finalMax < minValue){
@@ -26,13 +27,13 @@ int getSensorValue_All(int minValue){
 // higher pressure --> lower delay
 int getDelayFromPressure(int sensorValue) {
   int wait;
-  if (sensorValue <= currentDiff.getLowLevel()){
+  if (sensorValue <= currentDiff.getLowEasy()){
       wait = 80;
-   }else if (currentDiff.getLowLevel() < sensorValue && sensorValue <= currentDiff.getMediumLevel()){
+   }else if (currentDiff.getLowEasy() < sensorValue && sensorValue <= currentDiff.getMediumEasy()){
       wait = 40;
-   }else if (currentDiff.getMediumLevel() < sensorValue && sensorValue <= currentDiff.getHighLevel()){
+   }else if (currentDiff.getMediumEasy() < sensorValue && sensorValue <= currentDiff.getHighEasy()){
       wait = 20;
-   }else if (currentDiff.getHighLevel() < sensorValue) {
+   }else if (currentDiff.getHighEasy() < sensorValue) {
       wait = 5;
    }
    return wait;
@@ -41,13 +42,13 @@ int getDelayFromPressure(int sensorValue) {
 // higher pressure --> ligther color
 int getColorFromPressure(int sensorValue, int currentColor) {
   int nextColor = currentColor;
-  if(sensorValue <= currentDiff.getLowLevel()){
+  if(sensorValue <= currentDiff.getLowEasy()){
     nextColor += 1;
-  }else if(currentDiff.getLowLevel() < sensorValue && sensorValue <= currentDiff.getMediumLevel()){
+  }else if(currentDiff.getLowEasy() < sensorValue && sensorValue <= currentDiff.getMediumEasy()){
     nextColor += 3;
-  }else if(currentDiff.getMediumLevel() < sensorValue && sensorValue <= currentDiff.getHighLevel()){
+  }else if(currentDiff.getMediumEasy() < sensorValue && sensorValue <= currentDiff.getHighEasy()){
     nextColor += 5;
-  }else if(currentDiff.getHighLevel() < sensorValue){
+  }else if(currentDiff.getHighEasy() < sensorValue){
     nextColor += 7;
   }
   return nextColor;
@@ -125,7 +126,6 @@ void transitionAllLights(uint32_t newColor, uint32_t currentColor, int jumpVal) 
   int newRed = splitColor(newColor, 'r');
   int newBlue = splitColor(newColor, 'b');
   int newGreen = splitColor(newColor, 'g');
-  Serial.println("Goal r:" + (String)newRed + " g:" + (String)newGreen + " b:" + (String)newBlue);
   
   int currRed = splitColor(currentColor, 'r');
   int currBlue = splitColor(currentColor, 'b');
@@ -189,7 +189,6 @@ void transitionAllLights(uint32_t newColor, uint32_t currentColor, int jumpVal) 
       break;
     }
     setAllLights(strip.Color(currRed, currGreen, currBlue));
-    Serial.println("Current r:" + (String)currRed + " g:" + (String)currGreen + " b:" + (String)currBlue);
   }
 }
 

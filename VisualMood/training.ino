@@ -1,12 +1,13 @@
 // Smooth Loop for pressure transitions:
 void smoothOperator() {
-  uint32_t sensorValue = getSensorValue(SENSOR_3);
+  uint32_t sensorValue = getSensorValue(SENSOR_1);
+  Serial.println("Here!!!! " + (String)sensorValue);
   // This below is a timer that resets if below the lower level, and increases to 10 seconds. 
-  if (sensorValue < currentDiff.getMediumLevel()) {
+  if (sensorValue < currentDiff.getLowHard()) {
     smoothOP::curTime = 0;
   } else {
     if (smoothOP::lastTime != smoothOP::lastMarker) {
-      if (smoothOP::curTime < 10) {
+      if (smoothOP::curTime < 5) {
         smoothOP::curTime++;
       }
       smoothOP::lastMarker = second(now());
@@ -16,15 +17,16 @@ void smoothOperator() {
     }
   }
 
+
   
-  for(uint16_t i=0; i<10; i++) {
-      if (i == 9 && smoothOP::curTime == 10) {
-        meter.setPixelColor(i, meter.Color(0,255,0));
+  for(uint16_t i=0; i<5; i++) {
+      if (i == 4 && smoothOP::curTime == 5) {
+        meter.setPixelColor(i+5, meter.Color(0,255,0));
       }
       else if (i < smoothOP::curTime) {
-        meter.setPixelColor(i, meter.Color(0,0,255));
+        meter.setPixelColor(i+5, meter.Color(0,0,255));
       } else {
-        meter.setPixelColor(i, meter.Color(0,0,0));
+        meter.setPixelColor(i+5, meter.Color(0,0,0));
       }
   }
 
@@ -34,24 +36,24 @@ void smoothOperator() {
   uint32_t targetColor;
   if (smoothOP::curTime == 0) {
     targetColor = meter.Color(0,0,0);
-  } else if (smoothOP::curTime < 4) {
+  } else if (smoothOP::curTime < 3) {
     targetColor = meter.Color(0,0,255);
-  } else  if (smoothOP::curTime < 7) {
+  } else  if (smoothOP::curTime < 4) {
     targetColor = meter.Color(0,255,0);
   } else {
     targetColor = meter.Color(255,0,0);
   }
 
   
-  transitionAllLights(targetColor, curColor, 20);
+  transitionAllLights(targetColor, curColor, 100);
   
 }
 
 
 
 void maxOutTraining(){
-  sensorValue = getSensorValue(SENSOR_3);
-  float meterHeight = putInRange(sensorValue, 100, currentDiff.getHighLevel(), 0, 130);
+  sensorValue = getSensorValue(SENSOR_1);
+  float meterHeight = putInRange(sensorValue, 150, currentDiff.getHighHard(), 0, 130);
   for (int i = 0; i < meterHeight; i++){
     if(i <= 40){
       strip.setPixelColor(i, strip.Color(0,255,0));
