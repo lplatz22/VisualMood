@@ -56,17 +56,17 @@ enum DifficultyLevel{
 class Difficulty{
 private:
   DifficultyLevel currentDiff;
-  float high_High = 1023;
-  float high_Med = 980;
-  float high_Low = 750;
+  float high_High = 800;
+  float high_Med = 350;
+  float high_Low = 300;
   
-  float med_High = 980;
-  float med_Med = 800;
-  float med_Low = 650;
+  float med_High = 350;
+  float med_Med = 225;
+  float med_Low = 150;
 
-  float low_High = 900;
-  float low_Med = 725;
-  float low_Low = 600;
+  float low_High = 300;
+  float low_Med = 150;
+  float low_Low = 75;
 
   float high_High_Hard = 500;
   float high_Med_Hard = 350;
@@ -291,6 +291,7 @@ void loop() {
     case (ripple):
       lcd.print(make16Chars("Ripple"));
       rippleEffect();
+      
       break;
     case (colorWave):
       lcd.print(make16Chars("Color Wave"));

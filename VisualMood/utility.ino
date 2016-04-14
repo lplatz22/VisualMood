@@ -13,7 +13,7 @@ int getSensorValue_All(int minValue){
   int sensorVal = 0;
   //int sensorVal2 = analogRead(SENSOR_2);
   int sensorVal2 = 0;
-  int sensorVal3 = analogRead(SENSOR_3);
+  int sensorVal3 = analogRead(SENSOR_1);
   
   int max1 = max(sensorVal, sensorVal2);
   int finalMax = max(max1, sensorVal3);
@@ -205,6 +205,5 @@ uint8_t splitColor ( uint32_t c, char value ){
 String make16Chars(String input){
   for(int i = input.length(); i < 16; i++){
       input.concat(" ");
-  }
-  return input;
+  }  return input;
 }

@@ -168,6 +168,7 @@ void rippleEffect() {
   }
 }
 
+int waveCount = 0;
 //squeeze red/blue/green: send that color from 0->130, or until it stops recieving an input.
 //on stoppage of input, keep wave length, send until its consumed by the 130th pixel
 //basically, send a pixel of each color every loop that something is inputted,
@@ -188,14 +189,21 @@ void colorMixWave(){
   uint8_t red = 0;
   uint8_t blue = 0;
   uint8_t green = 0;
-  if(sensorValue > 0){
-    red = putInRange(sensorValue, 100, currentDiff.getMediumHard());
+  if(sensorValue > 0 && waveCount < 400){
+    red = 255/*putInRange(sensorValue, 100, currentDiff.getMediumHard());*/
+    waveCount++;
   }
   //if(sensorValue1 > 0){
   //   green = putInRange(sensorValue1, 100, currentDiff.getHighLevel());
   //}
-  if(sensorValue2 > 0){
-    blue = putInRange(sensorValue2, 100, currentDiff.getHighEasy());
+  if(sensorValue2 > 0 && waveCount > 200 && waveCount < 600){
+    blue = 255/*putInRange(sensorValue, 100, currentDiff.getMediumHard());*/
+    if(waveCount >= 400){
+      waveCount++;
+    }
+  }
+  if(waveCount >= 600){
+    waveCount = 0;
   }
   strip.setPixelColor(0, strip.Color(red, green, blue));
   strip.show();
@@ -210,6 +218,7 @@ void colorMixWave(){
 int pixelTimers[130] = { 0 };
 int fullTime = 255;
 int getNewColor = true;
+bool redorBlue = true;
 
 void colorMixPaint(){
 
@@ -221,12 +230,14 @@ void colorMixPaint(){
   // sensorValue1 = getSensorValue(SENSOR_2, 100);
   sensorValue2 = getSensorValue(SENSOR_3, 300);
 
-  if(sensorValue > 0){
+  if(sensorValue > 0 && redorBlue){
     redChosen = true;
+    redorBlue = false;
   //}else if(sensorValue1 > 0){
   //  greenChosen = true;
-  }else if(sensorValue2 > 0){
+  }else if(sensorValue > 0 && !redorBlue){
     blueChosen = true;
+    redorBlue = true;
   }
 
   if(redChosen){
