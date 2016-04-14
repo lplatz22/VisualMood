@@ -77,7 +77,7 @@ void maxOutTraining(){
     modeButtonState = digitalRead(modeButtonPin);
     if (!modeButtonPushed && modeButtonState == HIGH) {
       modeButtonPushed = true;
-      currentMode = pressure2x;
+      currentMode = painting;
       Serial.println("Pressed!");
       Serial.println(currentMode);
       break;
@@ -102,7 +102,7 @@ void maxOutTraining(){
     modeButtonState = digitalRead(modeButtonPin);
     if (!modeButtonPushed && modeButtonState == HIGH) {
       modeButtonPushed = true;
-      currentMode = pressure2x;
+      currentMode = painting;
       Serial.println("Pressed!");
       Serial.println(currentMode);
       break;

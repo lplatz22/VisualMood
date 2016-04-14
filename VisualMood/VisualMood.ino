@@ -176,10 +176,8 @@ namespace smoothOP
 
 enum LightMode {
   off, 
-  simple,
   smoothMove,
   maxOut,
-  pressure2x,
   painting, 
   colorWave,
   ripple,
@@ -252,14 +250,10 @@ void loop() {
     modeButtonPushed = true;
     Serial.println("Mode Changed");
     if(currentMode == off){
-      currentMode = simple;
-    }else if(currentMode == simple){
       currentMode = smoothMove;
     }else if (currentMode == smoothMove) {
       currentMode = maxOut;
     }else if (currentMode == maxOut) {
-      currentMode = pressure2x;
-    }else if (currentMode == pressure2x) {
       currentMode = painting;
     }else if (currentMode == painting) {
       currentMode = colorWave;
@@ -282,10 +276,6 @@ void loop() {
       lcd.print(make16Chars("LED OFF"));
       setAllLights(strip.Color(0, 0, 0));
       break;
-    case (simple):
-      lcd.print(make16Chars("Simple"));
-      colorWithPressure();
-      break;
     case (smoothMove):
       lcd.print(make16Chars("Training"));
       smoothOperator();
@@ -293,10 +283,6 @@ void loop() {
     case (maxOut):
       lcd.print(make16Chars("Max Out"));
       maxOutTraining();
-      break;
-    case (pressure2x):
-      lcd.print(make16Chars("Color Mixing"));
-      doublePressure();
       break;
     case (painting):
       lcd.print(make16Chars("Color Painting"));
